@@ -7,6 +7,7 @@ import BlankPage from "./pages/blank-page";
 import Chat from "./pages/chat";
 import Friends from "./pages/friends";
 import MyProfile from "./pages/my-profile";
+import ProfileSetup from "./pages/profile-setup";
 
 const router = createBrowserRouter([
   {
@@ -46,6 +47,19 @@ const router = createBrowserRouter([
       <>
         <SignedIn>
           <Onboard />
+        </SignedIn>
+        <SignedOut>
+          <RedirectToSignIn signUpForceRedirectUrl="/onboard" />
+        </SignedOut>
+      </>
+    ),
+  },
+  {
+    path: "/profile-setup",
+    element: (
+      <>
+        <SignedIn>
+          <ProfileSetup />
         </SignedIn>
         <SignedOut>
           <RedirectToSignIn signUpForceRedirectUrl="/onboard" />

@@ -12,29 +12,44 @@ import {
 } from "@/components/ui/sidebar";
 import { ModeToggle } from "./mode-toggle";
 import { Separator } from "./ui/separator";
-
-// This is sample data.
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navs: [
-    {
-      name: "Friends",
-      url: "/friends",
-      icon: UsersIcon,
-    },
-    {
-      name: "My Profile",
-      url: "/profile",
-      icon: CircleUserIcon,
-    },
-  ],
-};
+import { getProfile } from "@/api";
+import { useQuery } from "@tanstack/react-query";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const {
+    isError,
+    isLoading,
+    data: userData,
+  } = useQuery({
+    queryKey: ["get_profile"],
+    queryFn: async () => {
+      return await getProfile();
+    },
+  });
+
+  if (isLoading) return;
+  if (isError) return;
+
+  const data = {
+    user: {
+      name: userData.fullname,
+      email: userData.email,
+      avatar: userData.avatarUrl,
+    },
+    navs: [
+      {
+        name: "Friends",
+        url: "/friends",
+        icon: UsersIcon,
+      },
+      {
+        name: "My Profile",
+        url: "/profile",
+        icon: CircleUserIcon,
+      },
+    ],
+  };
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="bg-background">

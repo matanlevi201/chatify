@@ -4,7 +4,7 @@ import { LogOutIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
-import { useClerk, useUser } from "@clerk/clerk-react";
+import { useClerk } from "@clerk/clerk-react";
 import { Button } from "./ui/button";
 
 export function NavUser({
@@ -16,15 +16,14 @@ export function NavUser({
     avatar: string;
   };
 }) {
-  const { user: u } = useUser();
   const { signOut } = useClerk();
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <div className="flex gap-4 py-2">
-          <Avatar className="h-8 w-8 rounded-lg">
-            <AvatarImage src={u?.imageUrl} alt={user.name} />
+          <Avatar className="h-10 w-10 rounded-full">
+            <AvatarImage src={user.avatar} alt={user.name} />
             <AvatarFallback className="rounded-lg">CN</AvatarFallback>
           </Avatar>
           <div className="grid flex-1 text-left text-sm leading-tight">
