@@ -8,10 +8,12 @@ const DEFAULT_AVATARS = ["/avatar-1.png", "avatar-2.png", "avatar-3.png"];
 
 function AvatarSelection({
   handleFileChange,
+  defaultValue,
 }: {
   handleFileChange: (url: Blob) => void;
+  defaultValue?: string;
 }) {
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState(defaultValue);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,7 +36,10 @@ function AvatarSelection({
     <div className="w-full flex flex-col items-center space-y-4">
       <div className="relative group">
         <Avatar className="h-24 w-24 border-4 border-background shadow-md">
-          <AvatarImage src={avatarUrl || "/placeholder.svg"} alt="Profile" />
+          <AvatarImage
+            src={avatarUrl || defaultValue || "/placeholder.svg"}
+            alt="Profile"
+          />
           <AvatarFallback className="text-2xl">
             <UserIcon className="h-12 w-12" />
           </AvatarFallback>

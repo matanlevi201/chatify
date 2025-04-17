@@ -12,29 +12,16 @@ import {
 } from "@/components/ui/sidebar";
 import { ModeToggle } from "./mode-toggle";
 import { Separator } from "./ui/separator";
-import { getProfile } from "@/api";
-import { useQuery } from "@tanstack/react-query";
+import { useProfileStore } from "@/stores/use-profile-store";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const {
-    isError,
-    isLoading,
-    data: userData,
-  } = useQuery({
-    queryKey: ["get_profile"],
-    queryFn: async () => {
-      return await getProfile();
-    },
-  });
-
-  if (isLoading) return;
-  if (isError) return;
+  const { profile } = useProfileStore();
 
   const data = {
     user: {
-      name: userData.fullname,
-      email: userData.email,
-      avatar: userData.avatarUrl,
+      name: profile.displayName,
+      email: profile.email,
+      avatar: profile.avatarUrl,
     },
     navs: [
       {

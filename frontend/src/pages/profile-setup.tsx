@@ -18,12 +18,11 @@ import {
 import { ModeToggle } from "@/components/mode-toggle";
 import AvatarSelection from "@/components/avatar-selection";
 import { setProfile } from "@/api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
 function ProfileSetup() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [displayName, setDisplayName] = useState("");
   const [avatar, setAvatar] = useState<Blob>();
   const isFormValid = displayName.trim().length >= 3 && avatar;
@@ -35,15 +34,8 @@ function ProfileSetup() {
         await setProfile({ avatar, fullname: displayName });
       }
     },
-    async onSuccess() {
-      await queryClient.invalidateQueries({
-        queryKey: ["get_profile"],
-        refetchType: "all",
-      });
+    onSuccess() {
       navigate("/");
-    },
-    onError(error) {
-      console.log(error);
     },
   });
 

@@ -3,15 +3,18 @@ import { api } from "./api-client";
 const BASE_URL = "/api/users";
 
 export const setProfile = async ({
-  avatar,
   fullname,
+  bio,
+  avatar,
 }: {
-  avatar: Blob;
   fullname: string;
+  bio?: string;
+  avatar?: Blob;
 }) => {
   const formData = new FormData();
-  formData.append("avatar", avatar);
+  if (avatar) formData.append("avatar", avatar);
   formData.append("fullname", fullname);
+  if (bio) formData.append("bio", bio);
 
   const response = await api.post(`${BASE_URL}/profile`, formData, {
     headers: { "Content-Type": "multipart/form-data" },

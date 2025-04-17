@@ -13,6 +13,7 @@ interface UserAttrs {
   avatarUrl: string;
   fullname: string;
   status: UserStatus;
+  bio?: string;
   avatarKey?: string;
   lastSeen?: mongoose.Schema.Types.Date;
   updatedAt?: mongoose.Schema.Types.Date;
@@ -32,6 +33,7 @@ interface UserDoc extends mongoose.Document {
   avatarUrl: string;
   fullname: string;
   status: UserStatus;
+  bio?: string;
   avatarKey?: string;
   lastSeen?: mongoose.Schema.Types.Date;
   updatedAt?: mongoose.Schema.Types.Date;
@@ -49,6 +51,7 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(UserStatus),
       required: true,
     },
+    bio: { type: String, default: "" },
     lastSeen: { type: mongoose.Schema.Types.Date },
     createdAt: { type: mongoose.Schema.Types.Date, default: Date.now },
     updatedAt: { type: mongoose.Schema.Types.Date },
