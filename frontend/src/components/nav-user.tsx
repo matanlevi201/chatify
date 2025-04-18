@@ -36,7 +36,7 @@ export function NavUser({
             onClick={() => signOut()}
             variant="ghost"
             size="icon"
-            className="hover:cursor-pointer text-red-500 hover:text-red-500 hover:bg-red-500/15"
+            className=" text-red-500 hover:text-red-500 hover:bg-red-500/15"
           >
             <LogOutIcon />
           </Button>

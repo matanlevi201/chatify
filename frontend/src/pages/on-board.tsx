@@ -15,17 +15,10 @@ function Onboard() {
           your profile setup to continue.
         </p>
         <div className="flex gap-4 justify-center">
-          <Button
-            onClick={() => navigate("/profile-setup")}
-            className="hover:cursor-pointer"
-          >
+          <Button onClick={() => navigate("/profile-setup")}>
             Set Up Profile
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/")}
-            className="hover:cursor-pointer"
-          >
+          <Button variant="outline" onClick={() => navigate("/")}>
             Skip for Now
           </Button>
         </div>

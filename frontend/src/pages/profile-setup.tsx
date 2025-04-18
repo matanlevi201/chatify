@@ -1,54 +1,66 @@
-"use client";
-
-import type React from "react";
-
-import { useState } from "react";
-import { CheckIcon, Loader2Icon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { CheckIcon, ChevronLast, Loader2Icon } from "lucide-react";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { ModeToggle } from "@/components/mode-toggle";
-import AvatarSelection from "@/components/avatar-selection";
-import { setProfile } from "@/api";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import FormUpdateProfile, {
+  Field,
+  FormButton,
+  SetProfileSchema,
+} from "@/components/form-update-profile";
+import { useProfileStore } from "@/stores/use-profile-store";
+import { setProfile } from "@/api";
+import { Button } from "@/components/ui/button";
+import ToggleWrapper from "@/components/toggle-wrapper";
+
+const inputs: Field<SetProfileSchema>[] = [
+  {
+    name: "avatar",
+    type: "avatar",
+  },
+  {
+    name: "displayName",
+    type: "text",
+    label: "Display Name",
+    placeholder: "Enter your display name",
+    description: "This is how others will see you in the chat",
+  },
+];
 
 function ProfileSetup() {
+  const { profile, setProfile: setGlobalProfile } = useProfileStore();
   const navigate = useNavigate();
-  const [displayName, setDisplayName] = useState("");
-  const [avatar, setAvatar] = useState<Blob>();
-  const isFormValid = displayName.trim().length >= 3 && avatar;
-
   const { mutateAsync, isPending } = useMutation({
     mutationKey: ["set_profile"],
-    mutationFn: async () => {
-      if (isFormValid) {
-        await setProfile({ avatar, fullname: displayName });
-      }
+    mutationFn: async (values: SetProfileSchema) => {
+      return await setProfile({ ...values, fullname: values.displayName });
     },
-    onSuccess() {
+    onSuccess(newData: SetProfileSchema) {
+      setGlobalProfile(newData);
       navigate("/");
     },
   });
 
-  const handleFileChange = (file: Blob) => {
-    if (file) {
-      setAvatar(file);
-    }
+  const saveAndContinue = async (formValues: SetProfileSchema) => {
+    await mutateAsync(formValues);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await mutateAsync();
-  };
+  const buttons: FormButton[] = [
+    {
+      name: "Continue to Chat",
+      type: "submit",
+      isLoading: isPending,
+      loadingIcon: <Loader2Icon className="animate-spin" />,
+      notLoadingIcon: <CheckIcon />,
+      className: "w-full",
+    },
+  ];
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -56,50 +68,34 @@ function ProfileSetup() {
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-between">
             <CardTitle className="text-2xl">Set up your profile</CardTitle>
-            <ModeToggle />
+            <div>
+              <ModeToggle />
+              <ToggleWrapper msg="Skip for now">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => navigate("/")}
+                >
+                  <ChevronLast />
+                </Button>
+              </ToggleWrapper>
+            </div>
           </div>
           <CardDescription>
             Personalize your profile before entering the chat
           </CardDescription>
         </CardHeader>
-        <form>
-          <CardContent className="space-y-6">
-            <div className="flex flex-col items-center space-y-4">
-              <AvatarSelection handleFileChange={handleFileChange} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="display-name" className="text-sm font-medium">
-                Display Name
-              </Label>
-              <Input
-                id="display-name"
-                placeholder="Enter your display name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                className="bg-background"
-                autoComplete="off"
-              />
-              <p className="text-xs text-muted-foreground">
-                This is how others will see you in the chat
-              </p>
-            </div>
-          </CardContent>
-        </form>
-        <CardFooter>
-          <Button
-            className="w-full"
-            disabled={!isFormValid || isPending}
-            onClick={handleSubmit}
-          >
-            Continue to Chat
-            {isPending ? (
-              <Loader2Icon className="animate-spin" />
-            ) : (
-              <CheckIcon />
-            )}
-          </Button>
-        </CardFooter>
+        <CardContent>
+          <FormUpdateProfile
+            inputs={inputs}
+            buttons={buttons}
+            onSubmit={saveAndContinue}
+            defaultValues={{
+              displayName: profile.displayName,
+              bio: profile.bio,
+            }}
+          />
+        </CardContent>
       </Card>
     </div>
   );
