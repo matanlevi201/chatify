@@ -16,7 +16,7 @@ interface UserAttrs {
   bio?: string;
   avatarKey?: string;
   lastSeen?: mongoose.Schema.Types.Date;
-  updatedAt?: mongoose.Schema.Types.Date;
+  friends?: mongoose.Schema.Types.ObjectId[];
 }
 
 // An interface that describes the properties
@@ -33,10 +33,10 @@ interface UserDoc extends mongoose.Document {
   avatarUrl: string;
   fullname: string;
   status: UserStatus;
-  bio?: string;
-  avatarKey?: string;
-  lastSeen?: mongoose.Schema.Types.Date;
-  updatedAt?: mongoose.Schema.Types.Date;
+  bio: string;
+  avatarKey: string;
+  lastSeen: mongoose.Schema.Types.Date;
+  friends: mongoose.Schema.Types.ObjectId[];
 }
 
 const userSchema = new mongoose.Schema(
@@ -53,8 +53,13 @@ const userSchema = new mongoose.Schema(
     },
     bio: { type: String, default: "" },
     lastSeen: { type: mongoose.Schema.Types.Date },
-    createdAt: { type: mongoose.Schema.Types.Date, default: Date.now },
-    updatedAt: { type: mongoose.Schema.Types.Date },
+    friends: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: [],
+      },
+    ],
   },
   {
     toJSON: {
@@ -62,6 +67,7 @@ const userSchema = new mongoose.Schema(
         ret.id = ret._id;
         delete ret._id;
         delete ret.clerkId;
+        delete ret.avatarKey;
         delete ret.__v;
       },
     },
@@ -71,6 +77,8 @@ const userSchema = new mongoose.Schema(
 userSchema.statics.build = (attrs: UserAttrs) => {
   return new User(attrs);
 };
+
+userSchema.set("timestamps", true);
 
 const User = mongoose.model<UserDoc, UserModel>("User", userSchema);
 

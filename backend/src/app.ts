@@ -2,7 +2,12 @@ import cors from "cors";
 import express from "express";
 import { json } from "body-parser";
 import { env } from "./config/env";
-import { UserRouter, WebhooksRouter } from "./routes";
+import {
+  FriendRouter,
+  RequestRouter,
+  UserRouter,
+  WebhooksRouter,
+} from "./routes";
 import { clerkMiddleware } from "@clerk/express";
 import { errorHandler } from "./middlewares";
 
@@ -17,6 +22,8 @@ app.use(
   })
 );
 app.use(clerkMiddleware());
+app.use("/api/friends", FriendRouter);
+app.use("/api/requests", RequestRouter);
 app.use("/api/users", UserRouter);
 app.use("/api/webhooks", WebhooksRouter);
 
