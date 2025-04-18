@@ -2,16 +2,24 @@ import { Outlet } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useQuery } from "@tanstack/react-query";
-import { getProfile } from "@/api";
+import { getCurrentUser } from "@/api";
 import { useProfileStore } from "@/stores/use-profile-store";
+import { useCurrentUserStore } from "@/stores/use-current-user";
 
 function AppLayout() {
   const { setProfile } = useProfileStore();
+  const { setCurrentUser } = useCurrentUserStore();
   const { isError, isLoading } = useQuery({
-    queryKey: ["get_profile"],
+    queryKey: ["get_current_user"],
     queryFn: async () => {
-      const data = await getProfile();
-      setProfile(data);
+      const data = await getCurrentUser();
+      setProfile({
+        displayName: data.fullname,
+        email: data.email,
+        avatarUrl: data.avatarUrl,
+        bio: data.bio,
+      });
+      setCurrentUser({ id: data.id, email: data.email });
       return data;
     },
   });

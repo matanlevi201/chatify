@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { getAvatar, getProfile, setProfile } from "../controllers";
+import {
+  getAvatar,
+  getCurrentUser,
+  setProfile,
+} from "../controllers";
 import { requireAuth } from "../middlewares";
 import multer from "multer";
 
@@ -23,7 +27,7 @@ const upload = multer({
   },
 });
 
-router.get("/profile", requireAuth, getProfile);
+router.get("/", requireAuth, getCurrentUser);
 router.post("/profile", requireAuth, upload.single("avatar"), setProfile);
 router.get("/profile/avatar/:id", requireAuth, getAvatar);
 

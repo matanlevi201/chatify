@@ -32,17 +32,12 @@ const swapAvatars = async (
   return { key };
 };
 
-export const getProfile = async (req: Request, res: Response) => {
+export const getCurrentUser = async (req: Request, res: Response) => {
   const user = await User.findOne({ clerkId: req.auth?.userId });
   if (!user) {
     throw new NotFoundError();
   }
-  res.status(200).send({
-    displayName: user.fullname,
-    email: user.email,
-    avatarUrl: user.avatarUrl,
-    bio: user.bio,
-  });
+  res.status(200).send(user);
 };
 
 export const setProfile = async (req: Request, res: Response) => {
