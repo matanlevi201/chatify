@@ -3,6 +3,19 @@ import { FriendRequest, RequestStatus } from "../models/friend-request";
 import { BadRequestError, NotFoundError } from "../errors";
 import { User } from "../models/user";
 
+export const getAllRequests = async (req: Request, res: Response) => {
+  const user = await User.findOne({ clerkId: req.auth?.userId }, { _id: 1 });
+  if (!user) {
+    throw new NotFoundError();
+  }
+  const requests = await FriendRequest.find({
+    $or: [{ sender: user.id }, { receiver: user.id }],
+  })
+    .populate("sender", "id fullname email avatarUrl")
+    .populate("receiver", "id fullname email avatarUrl");
+  res.status(200).send(requests);
+};
+
 // Common approaches in enterprise chat apps:
 //     Hard Block (One-Time Rejection)
 //     After user B rejects the request, user A cannot send another request.

@@ -41,7 +41,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="bg-background">
         <div className="flex items-center gap-2">
-          <img src="/chatify.svg" className="size-10" />
+          <img src="/chatify.svg" className="size-8" />
           <div className="grid flex-1 text-left text-sm leading-tight">
             <span className="truncate font-bold text-xl">Chatify</span>
           </div>

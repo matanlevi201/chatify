@@ -7,6 +7,11 @@ export const getCurrentUser = async () => {
   return response.data;
 };
 
+export const searchUsers = async (query: string) => {
+  const response = await api.get(`${BASE_URL}/search?q=${query}`);
+  return response.data;
+};
+
 export const setProfile = async ({
   fullname,
   bio,

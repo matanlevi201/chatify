@@ -18,11 +18,12 @@ export function NavMain({
   }[];
 }) {
   return (
-    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+    <SidebarGroup>
       <SidebarMenu>
         {navs.map((item) => (
-          <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
+          <SidebarMenuItem key={item.name} className="flex items-center">
+            {/* <div className=" bg-primary w-[2px] h-3/5"/> */}
+            <SidebarMenuButton asChild tooltip={item.name}>
               <Link to={item.url} className="px-4 py-5">
                 <item.icon />
                 <span className="font-semibold">{item.name}</span>

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  searchUsers,
   getAvatar,
   getCurrentUser,
   setProfile,
@@ -28,7 +29,8 @@ const upload = multer({
 });
 
 router.get("/", requireAuth, getCurrentUser);
+router.get("/search", requireAuth, searchUsers);
 router.post("/profile", requireAuth, upload.single("avatar"), setProfile);
-router.get("/profile/avatar/:id", requireAuth, getAvatar);
+router.get("/profile/avatar/:key", requireAuth, getAvatar);
 
 export { router as UserRouter };

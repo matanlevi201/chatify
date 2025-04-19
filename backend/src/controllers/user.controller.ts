@@ -5,6 +5,7 @@ import { User } from "../models/user";
 import { env } from "../config/env";
 import sharp from "sharp";
 import { v4 } from "uuid";
+import { Types } from "mongoose";
 
 const swapAvatars = async (
   userId: string,
@@ -68,13 +69,14 @@ export const setProfile = async (req: Request, res: Response) => {
 };
 
 export const getAvatar = async (req: Request, res: Response) => {
+  const { key } = req.params;
   const user = await User.findOne({ clerkId: req.auth?.userId });
   if (!user) {
     throw new NotFoundError();
   }
   try {
     const stream = await getObject({
-      fileKey: user?.avatarKey ?? "",
+      fileKey: key ?? "",
     });
 
     res.setHeader("Content-Type", "image/jpeg");
@@ -82,4 +84,83 @@ export const getAvatar = async (req: Request, res: Response) => {
   } catch (err) {
     throw new NotFoundError();
   }
+};
+
+export const searchUsers = async (req: Request, res: Response) => {
+  const { q } = req.query;
+  const user = await User.findOne({ clerkId: req.auth?.userId });
+  if (!user) {
+    throw new NotFoundError();
+  }
+  const users = await User.aggregate([
+    {
+      $match: {
+        $and: [
+          {
+            $or: [
+              { fullname: { $regex: q, $options: "i" } },
+              { email: { $regex: q, $options: "i" } },
+            ],
+          },
+          { _id: { $ne: Types.ObjectId.createFromHexString(user.id) } },
+        ],
+      },
+    },
+    {
+      $lookup: {
+        from: "friendrequests",
+        let: { userId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $or: [
+                  {
+                    $and: [
+                      {
+                        $eq: [
+                          "$sender",
+                          Types.ObjectId.createFromHexString(user.id),
+                        ],
+                      },
+                      { $eq: ["$receiver", "$$userId"] },
+                    ],
+                  },
+                  {
+                    $and: [
+                      {
+                        $eq: [
+                          "$receiver",
+                          Types.ObjectId.createFromHexString(user.id),
+                        ],
+                      },
+                      { $eq: ["$sender", "$$userId"] },
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        ],
+        as: "friendRequest",
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        id: "$_id",
+        fullname: 1,
+        email: 1,
+        avatarUrl: 1,
+        friendStatus: {
+          $cond: [
+            { $gt: [{ $size: "$friendRequest" }, 0] },
+            { $arrayElemAt: ["$friendRequest.status", 0] },
+            "none",
+          ],
+        },
+      },
+    },
+  ]);
+  res.status(200).send(users);
 };
