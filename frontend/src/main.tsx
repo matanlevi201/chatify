@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router-dom";
 import router from "./router";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ModalManager } from "./components/modal-manager";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -23,6 +24,7 @@ createRoot(document.getElementById("root")!).render(
         {/* <App /> */}
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
           <RouterProvider router={router} />
+          <ModalManager />
         </ThemeProvider>
       </QueryClientProvider>
     </ClerkProvider>

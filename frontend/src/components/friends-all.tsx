@@ -9,8 +9,13 @@ import {
 } from "./ui/dropdown-menu";
 import { useQuery } from "@tanstack/react-query";
 import { getFriends } from "@/api/friends";
+import { useModalStore } from "@/stores/use-modal-store";
+import { useState } from "react";
 
 function AllFriends() {
+  //  dropdownmenu overly conflicts with dialog overlay due to the async nature of dropdownmenu
+  const [callback, setCallback] = useState({ run: () => {} });
+  const { setActiveModal } = useModalStore();
   const {
     data: friends,
     isError,
@@ -62,16 +67,38 @@ function AllFriends() {
               <Button size="sm" variant="ghost">
                 Message
               </Button>
-              <DropdownMenu>
+              <DropdownMenu
+                onOpenChange={(isOpen) => {
+                  if (!isOpen) callback.run();
+                }}
+              >
                 <DropdownMenuTrigger asChild>
                   <Button size="icon" variant="ghost" className="h-8 w-8">
                     <MoreVerticalIcon className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>View Profile</DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => console.log(friend.id)}
+                    onSelect={() =>
+                      setCallback({
+                        run: () =>
+                          setActiveModal("view:profile", { userId: friend.id }),
+                      })
+                    }
+                  >
+                    View Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onSelect={() =>
+                      setCallback({
+                        run: () =>
+                          setActiveModal("confirm", {
+                            description: `You will no longer be able to communicate, but you can always send
+            another request later if needed.`,
+                            callback: () => console.log("=="),
+                          }),
+                      })
+                    }
                     className="text-destructive"
                   >
                     Remove Friend

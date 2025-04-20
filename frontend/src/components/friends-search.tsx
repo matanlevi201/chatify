@@ -1,4 +1,10 @@
-import { ClockIcon, Loader2Icon, SearchIcon, UserPlusIcon } from "lucide-react";
+import {
+  ClockIcon,
+  Loader2Icon,
+  SearchIcon,
+  UserIcon,
+  UserPlusIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -11,8 +17,10 @@ import { Badge } from "./ui/badge";
 import { sendRequest } from "@/api/requests";
 import { useRequestStore } from "@/stores/use-requests-store";
 import { useShallow } from "zustand/shallow";
+import { useModalStore } from "@/stores/use-modal-store";
 
 function SearchUsers() {
+  const { setActiveModal } = useModalStore();
   const [result, setResult] = useState<
     {
       id: string;
@@ -124,6 +132,14 @@ function SearchUsers() {
                         Pending
                       </Badge>
                     )}
+                    <Button
+                      variant="ghost"
+                      onClick={() =>
+                        setActiveModal("view:profile", { userId: user.id })
+                      }
+                    >
+                      <UserIcon className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
