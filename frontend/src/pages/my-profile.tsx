@@ -61,7 +61,6 @@ function MyProfile() {
   });
 
   const save = async (values: SetProfileSchema) => {
-    console.log(values);
     await mutateAsync(values);
   };
 

@@ -2,12 +2,38 @@ import { useRequestStore } from "@/stores/use-requests-store";
 import { Avatar, AvatarImage } from "./ui/avatar";
 import { AvatarFallback } from "@radix-ui/react-avatar";
 import { Button } from "./ui/button";
-import { CheckIcon, XIcon } from "lucide-react";
+import { CheckIcon, Loader2Icon, XIcon } from "lucide-react";
 import { Badge } from "./ui/badge";
+import { acceptRequest, rejectRequest } from "@/api/requests";
+import { useShallow } from "zustand/shallow";
+import { useMutation } from "@tanstack/react-query";
 
 function IncomingRequests() {
-  const { incomingRequests } = useRequestStore();
-  const incoming = incomingRequests();
+  const [incoming, removeIncomingRequest] = useRequestStore(
+    useShallow((state) => [state.incoming, state.removeIncomingRequest])
+  );
+  const { mutateAsync: acceptFriend, isPending: acceptPending } = useMutation({
+    mutationKey: ["accept_friend"],
+    mutationFn: async (id: string) => {
+      await acceptRequest({ id });
+      return id;
+    },
+    onSuccess(id) {
+      removeIncomingRequest(id);
+    },
+  });
+
+  const { mutateAsync: rejectFriend, isPending: rejectPending } = useMutation({
+    mutationKey: ["reject_friend"],
+    mutationFn: async (id: string) => {
+      await rejectRequest({ id });
+      return id;
+    },
+    onSuccess(id) {
+      removeIncomingRequest(id);
+    },
+  });
+
   return (
     <div className="w-full">
       <h3 className="text-md font-medium mb-2 flex items-center">
@@ -49,13 +75,26 @@ function IncomingRequests() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => console.log(request)}
+                disabled={rejectPending}
+                onClick={async () => await rejectFriend(request.id)}
               >
-                <XIcon className="h-4 w-4" />
+                {rejectPending ? (
+                  <Loader2Icon className="animate-spin" />
+                ) : (
+                  <XIcon className="h-4 w-4" />
+                )}
                 Decline
               </Button>
-              <Button size="sm" onClick={() => console.log(request)}>
-                <CheckIcon className="h-4 w-4" />
+              <Button
+                size="sm"
+                disabled={acceptPending}
+                onClick={async () => await acceptFriend(request.id)}
+              >
+                {acceptPending ? (
+                  <Loader2Icon className="animate-spin" />
+                ) : (
+                  <CheckIcon className="h-4 w-4" />
+                )}
                 Accept
               </Button>
             </div>

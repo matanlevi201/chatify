@@ -7,18 +7,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { useQuery } from "@tanstack/react-query";
+import { getFriends } from "@/api/friends";
 
 function AllFriends() {
-  const { friends } = {
-    friends: [
-      {
-        id: "1",
-        fullname: "fullname",
-        email: "exmaple@gmail.com",
-        avatarUrl: "",
-      },
-    ],
-  };
+  const {
+    data: friends,
+    isError,
+    isLoading,
+  } = useQuery<
+    { id: string; fullname: string; email: string; avatarUrl: string }[]
+  >({
+    queryKey: ["get_friends"],
+    queryFn: async () => {
+      const data = await getFriends();
+      return data;
+    },
+    initialData: [],
+  });
+
+  if (isLoading) return;
+  if (isError) return;
+
   return (
     <div className="w-full">
       <h3 className="text-md font-medium mb-2 flex items-center">

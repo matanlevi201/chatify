@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { useCurrentUserStore } from "./use-current-user";
 
 type Request = {
-  id: number;
+  id: string;
   sender: { id: string; fullname: string; email: string; avatarUrl: string };
   receiver: { id: string; fullname: string; email: string; avatarUrl: string };
   status: "pending" | "rejected" | "accepted";
@@ -10,28 +10,46 @@ type Request = {
 
 type RequestsState = {
   requests: Request[];
+  incoming: Request[];
+  sent: Request[];
   setRequests: (requests: Request[]) => void;
   addRequest: (request: Request) => void;
-  sentRequests: () => Request[];
-  incomingRequests: () => Request[];
+  addSentRequest: (request: Request) => void;
+  addIncomingRequest: (request: Request) => void;
+  removeSentRequest: (id: string) => void;
+  removeIncomingRequest: (id: string) => void;
 };
 
-export const useRequestStore = create<RequestsState>((set, get) => ({
+export const useRequestStore = create<RequestsState>((set) => ({
   requests: [],
-  setRequests: (requests: Request[]) =>
-    set(() => ({
+  incoming: [],
+  sent: [],
+  setRequests: (requests: Request[]) => {
+    const currentUser = useCurrentUserStore.getState().currentUser;
+    return set(() => ({
       requests: requests,
-    })),
+      incoming: requests.filter((req) => req.receiver.id === currentUser.id),
+      sent: requests.filter((req) => req.sender.id === currentUser.id),
+    }));
+  },
   addRequest: (request) =>
     set((state) => ({
       requests: [...state.requests, request],
     })),
-  sentRequests: () => {
-    const currentUser = useCurrentUserStore.getState().currentUser;
-    return get().requests.filter((req) => req.sender.id === currentUser.id);
-  },
-  incomingRequests: () => {
-    const currentUser = useCurrentUserStore.getState().currentUser;
-    return get().requests.filter((req) => req.receiver.id === currentUser.id);
-  },
+  addSentRequest: (request) =>
+    set((state) => ({
+      sent: [...state.sent, request],
+    })),
+  addIncomingRequest: (request) =>
+    set((state) => ({
+      sent: [...state.sent, request],
+    })),
+  removeSentRequest: (id) =>
+    set((state) => ({
+      sent: state.sent.filter((req) => req.id !== id),
+    })),
+  removeIncomingRequest: (id) =>
+    set((state) => ({
+      incoming: state.incoming.filter((req) => req.id !== id),
+    })),
 }));

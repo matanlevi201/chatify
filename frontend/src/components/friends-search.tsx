@@ -1,5 +1,5 @@
 import { ClockIcon, Loader2Icon, SearchIcon, UserPlusIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -8,6 +8,9 @@ import { useMutation } from "@tanstack/react-query";
 import { useSearch } from "@/hooks/use-search";
 import { searchUsers } from "@/api";
 import { Badge } from "./ui/badge";
+import { sendRequest } from "@/api/requests";
+import { useRequestStore } from "@/stores/use-requests-store";
+import { useShallow } from "zustand/shallow";
 
 function SearchUsers() {
   const [result, setResult] = useState<
@@ -26,7 +29,9 @@ function SearchUsers() {
         setResult(data);
       },
     });
-
+  const [addSentRequest, sent] = useRequestStore(
+    useShallow((state) => [state.addSentRequest, state.sent])
+  );
   const { mutateAsync: addFriend, isPending } = useMutation({
     mutationKey: ["add_friend"],
     mutationFn: async (data: {
@@ -35,13 +40,23 @@ function SearchUsers() {
       email: string;
       avatarUrl: string;
     }) => {
-      console.log(data);
-      return true;
+      const request = await sendRequest({ receiver: data.id });
+      return request;
     },
-    onSuccess() {
-      console.log("Friend added");
+    onSuccess(data) {
+      addSentRequest(data);
     },
   });
+
+  useEffect(() => {
+    const updatedResults = result.map((u) => {
+      u.friendStatus = sent.find((req) => req.receiver.id === u.id)
+        ? "pending"
+        : "none";
+      return u;
+    });
+    setResult(updatedResults);
+  }, [sent]);
 
   return (
     <div className="mb-6">
@@ -90,7 +105,11 @@ function SearchUsers() {
                   </div>
                   <div className="flex gap-2">
                     {user.friendStatus === "none" && (
-                      <Button size="sm" onClick={() => addFriend(user)}>
+                      <Button
+                        size="sm"
+                        disabled={isPending}
+                        onClick={async () => await addFriend(user)}
+                      >
                         {isPending ? (
                           <Loader2Icon className="animate-spin" />
                         ) : (
