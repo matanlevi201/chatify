@@ -7,13 +7,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { useQuery } from "@tanstack/react-query";
-import { getFriends } from "@/api/friends";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getFriends, removeFriend } from "@/api/friends";
 import { useModalStore } from "@/stores/use-modal-store";
 import { useState } from "react";
+import { getRequests } from "@/api/requests";
+import { useRequestStore } from "@/stores/use-requests-store";
+import { useShallow } from "zustand/shallow";
 
 function AllFriends() {
+  const queryClient = useQueryClient();
   //  dropdownmenu overly conflicts with dialog overlay due to the async nature of dropdownmenu
+  const [setRequests] = useRequestStore(
+    useShallow((state) => [state.setRequests])
+  );
   const [callback, setCallback] = useState({ run: () => {} });
   const { setActiveModal } = useModalStore();
   const {
@@ -29,6 +36,18 @@ function AllFriends() {
       return data;
     },
     initialData: [],
+  });
+
+  const { mutateAsync } = useMutation({
+    mutationKey: ["remove_friend"],
+    mutationFn: async (id: string) => {
+      return await removeFriend({ id });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["get_friends"] });
+      const requests = await getRequests();
+      setRequests(requests);
+    },
   });
 
   if (isLoading) return;
@@ -95,7 +114,7 @@ function AllFriends() {
                           setActiveModal("confirm", {
                             description: `You will no longer be able to communicate, but you can always send
             another request later if needed.`,
-                            callback: () => console.log("=="),
+                            callback: async () => await mutateAsync(friend.id),
                           }),
                       })
                     }

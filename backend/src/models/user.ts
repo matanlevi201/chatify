@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
 
 export enum UserStatus {
-  CONNECTED = "connected",
-  DISCONNECTED = "disconnected",
+  ONLINE = "online",
+  AWAY = "away",
+  OFFLINE = "offline",
 }
 
 // An interface that describes the properties
@@ -37,6 +38,7 @@ interface UserDoc extends mongoose.Document {
   avatarKey: string;
   lastSeen: mongoose.Schema.Types.Date;
   friends: mongoose.Schema.Types.ObjectId[];
+  createdAt: Date;
 }
 
 const userSchema = new mongoose.Schema(

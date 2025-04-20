@@ -31,3 +31,8 @@ export const setProfile = async ({
   });
   return response.data;
 };
+
+export const getUser = async ({ id }: { id: string }) => {
+  const response = await api.get(`${BASE_URL}/user/${id}`);
+  return response.data;
+};

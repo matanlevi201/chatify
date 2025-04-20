@@ -4,6 +4,7 @@ import {
   getAvatar,
   getCurrentUser,
   setProfile,
+  getUser,
 } from "../controllers";
 import { requireAuth } from "../middlewares";
 import multer from "multer";
@@ -29,6 +30,7 @@ const upload = multer({
 });
 
 router.get("/", requireAuth, getCurrentUser);
+router.get("/user/:id", requireAuth, getUser);
 router.get("/search", requireAuth, searchUsers);
 router.post("/profile", requireAuth, upload.single("avatar"), setProfile);
 router.get("/profile/avatar/:key", requireAuth, getAvatar);

@@ -6,6 +6,7 @@ import { AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { getUser } from "@/api";
 
 interface ModalViewProfileProps {
   open: boolean;
@@ -22,19 +23,20 @@ const STATUS_COLOR = {
 
 function ModalViewProfile({ open, props }: ModalViewProfileProps) {
   const { closeModal } = useModalStore();
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError } = useQuery<{
+    id: string;
+    bio: string;
+    email: string;
+    status: "online" | "away" | "offline";
+    fullname: string;
+    avatarUrl: string;
+    createdAt: Date;
+    mutualFriends: number;
+  }>({
     queryKey: ["get_user"],
     queryFn: async () => {
-      return {
-        id: "1",
-        bio: "Product designer and coffee enthusiast. Always looking for new creative challenges.",
-        email: "example@gmail.com",
-        status: "online",
-        fullname: "fullname",
-        avatarUrl: "/avatar-1.png",
-        createdAt: new Date(),
-        mutualFriends: 5,
-      };
+      const user = await getUser({ id: props.userId });
+      return user;
     },
   });
   if (isLoading) return;
@@ -61,7 +63,7 @@ function ModalViewProfile({ open, props }: ModalViewProfileProps) {
           <span className="font-medium">{data.email}</span>
         </div>
 
-        <div className="flex">
+        <div className="flex gap-1">
           <Badge variant="outline" className="font-normal">
             @{data.fullname}
           </Badge>

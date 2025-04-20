@@ -164,3 +164,34 @@ export const searchUsers = async (req: Request, res: Response) => {
   ]);
   res.status(200).send(users);
 };
+
+export const getUser = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const [user, currentUser] = await Promise.all([
+    User.findOne({ _id: id }),
+    User.findOne({ clerkId: req.auth?.userId }),
+  ]);
+
+  if (!user) {
+    throw new NotFoundError();
+  }
+
+  const userFriends = user.friends || [];
+  const currentUserFriends = currentUser?.friends || [];
+
+  const mutualFriends = userFriends.filter((friendId) =>
+    currentUserFriends.some((id) => id.toString() === friendId.toString())
+  );
+
+  const userWithMutualCount = {
+    id: user.id,
+    bio: user.bio,
+    email: user.email,
+    status: user.status,
+    fullname: user.fullname,
+    avatarUrl: user.avatarUrl,
+    createdAt: user.createdAt,
+    mutualFriends: mutualFriends.length,
+  };
+  res.status(200).send(userWithMutualCount);
+};
