@@ -6,11 +6,11 @@ import { ClockIcon, Loader2Icon } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { useShallow } from "zustand/shallow";
 import { useMutation } from "@tanstack/react-query";
-import { cancelRequest } from "@/api/requests";
+import { cancelRequest, getRequests } from "@/api/requests";
 
 function SentRequests() {
-  const [sent, removeSentRequest] = useRequestStore(
-    useShallow((state) => [state.sent, state.removeSentRequest])
+  const [sent, setRequests] = useRequestStore(
+    useShallow((state) => [state.sent, state.setRequests])
   );
   const { mutateAsync, isPending } = useMutation({
     mutationKey: ["cancel_request"],
@@ -18,10 +18,12 @@ function SentRequests() {
       await cancelRequest({ id });
       return id;
     },
-    onSuccess(id) {
-      removeSentRequest(id);
+    async onSuccess() {
+      const requests = await getRequests();
+      setRequests(requests);
     },
   });
+
   return (
     <div className="w-full">
       <h3 className="text-md font-medium mb-2 flex items-center">

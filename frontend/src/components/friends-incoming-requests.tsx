@@ -4,13 +4,13 @@ import { AvatarFallback } from "@radix-ui/react-avatar";
 import { Button } from "./ui/button";
 import { CheckIcon, Loader2Icon, XIcon } from "lucide-react";
 import { Badge } from "./ui/badge";
-import { acceptRequest, rejectRequest } from "@/api/requests";
+import { acceptRequest, getRequests, rejectRequest } from "@/api/requests";
 import { useShallow } from "zustand/shallow";
 import { useMutation } from "@tanstack/react-query";
 
 function IncomingRequests() {
-  const [incoming, removeIncomingRequest] = useRequestStore(
-    useShallow((state) => [state.incoming, state.removeIncomingRequest])
+  const [incoming, setRequests] = useRequestStore(
+    useShallow((state) => [state.incoming, state.setRequests])
   );
   const { mutateAsync: acceptFriend, isPending: acceptPending } = useMutation({
     mutationKey: ["accept_friend"],
@@ -18,8 +18,9 @@ function IncomingRequests() {
       await acceptRequest({ id });
       return id;
     },
-    onSuccess(id) {
-      removeIncomingRequest(id);
+    async onSuccess() {
+      const requests = await getRequests();
+      setRequests(requests);
     },
   });
 
@@ -29,8 +30,9 @@ function IncomingRequests() {
       await rejectRequest({ id });
       return id;
     },
-    onSuccess(id) {
-      removeIncomingRequest(id);
+    async onSuccess() {
+      const requests = await getRequests();
+      setRequests(requests);
     },
   });
 

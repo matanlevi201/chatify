@@ -9,21 +9,13 @@ export const getAllRequests = async (req: Request, res: Response) => {
     throw new NotFoundError();
   }
   const requests = await FriendRequest.find({
-    $or: [
-      { sender: user.id, status: RequestStatus.PENDING },
-      { receiver: user.id, status: RequestStatus.PENDING },
-    ],
+    $or: [{ sender: user.id }, { receiver: user.id }],
   })
     .populate("sender", "id fullname email avatarUrl")
     .populate("receiver", "id fullname email avatarUrl");
   res.status(200).send(requests);
 };
 
-// Common approaches in enterprise chat apps:
-//     Hard Block (One-Time Rejection)
-//     After user B rejects the request, user A cannot send another request.
-//     This avoids spamming and respects user B's decision.
-//     Example: Some internal enterprise tools used in large orgs take this stricter approach for //professionalism.
 export const sendRequest = async (req: Request, res: Response) => {
   const { receiver } = req.body;
   const sender = await User.findOne({ clerkId: req.auth?.userId }, { _id: 1 });
@@ -53,7 +45,7 @@ export const rejectRequest = async (req: Request, res: Response) => {
   if (!user) {
     throw new NotFoundError();
   }
-  const friendRequest = await FriendRequest.findOne({
+  const friendRequest = await FriendRequest.deleteOne({
     _id: id,
     receiver: user.id,
     status: RequestStatus.PENDING,
@@ -61,8 +53,6 @@ export const rejectRequest = async (req: Request, res: Response) => {
   if (!friendRequest) {
     throw new NotFoundError();
   }
-  friendRequest.status = RequestStatus.REJECTED;
-  await friendRequest.save();
   res.status(200).send();
 };
 
@@ -99,10 +89,7 @@ export const acceptRequest = async (req: Request, res: Response) => {
 
 export const cancelRequest = async (req: Request, res: Response) => {
   const { id } = req.body;
-  const user = await User.findOne(
-    { clerkId: req.auth?.userId },
-    { _id: 1, friends: 1 }
-  );
+  const user = await User.findOne({ clerkId: req.auth?.userId }, { _id: 1 });
   if (!user) {
     throw new NotFoundError();
   }

@@ -28,8 +28,12 @@ export const useRequestStore = create<RequestsState>((set) => ({
     const currentUser = useCurrentUserStore.getState().currentUser;
     return set(() => ({
       requests: requests,
-      incoming: requests.filter((req) => req.receiver.id === currentUser.id),
-      sent: requests.filter((req) => req.sender.id === currentUser.id),
+      incoming: requests.filter(
+        (req) => req.receiver.id === currentUser.id && req.status === "pending"
+      ),
+      sent: requests.filter(
+        (req) => req.sender.id === currentUser.id && req.status === "pending"
+      ),
     }));
   },
   addRequest: (request) =>

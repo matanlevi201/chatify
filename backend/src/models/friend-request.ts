@@ -2,7 +2,6 @@ import mongoose, { type ObjectId } from "mongoose";
 
 export enum RequestStatus {
   PENDING = "pending",
-  REJECTED = "rejected",
   ACCEPTED = "accepted",
 }
 

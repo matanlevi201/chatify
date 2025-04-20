@@ -14,22 +14,22 @@ import { useMutation } from "@tanstack/react-query";
 import { useSearch } from "@/hooks/use-search";
 import { searchUsers } from "@/api";
 import { Badge } from "./ui/badge";
-import { sendRequest } from "@/api/requests";
+import { getRequests, sendRequest } from "@/api/requests";
 import { useRequestStore } from "@/stores/use-requests-store";
 import { useShallow } from "zustand/shallow";
 import { useModalStore } from "@/stores/use-modal-store";
 
+type Friend = {
+  id: string;
+  fullname: string;
+  email: string;
+  avatarUrl: string;
+  friendStatus: "pending" | "rejected" | "accepted" | "none";
+};
+
 function SearchUsers() {
   const { setActiveModal } = useModalStore();
-  const [result, setResult] = useState<
-    {
-      id: string;
-      fullname: string;
-      email: string;
-      avatarUrl: string;
-      friendStatus: "pending" | "rejected" | "accepted" | "none";
-    }[]
-  >([]);
+  const [result, setResult] = useState<Friend[]>([]);
   const { searchQuery, debouncedQuery, isSearching, setSearchQuery } =
     useSearch({
       callback: async () => {
@@ -37,8 +37,8 @@ function SearchUsers() {
         setResult(data);
       },
     });
-  const [addSentRequest, sent] = useRequestStore(
-    useShallow((state) => [state.addSentRequest, state.sent])
+  const [setRequests, requests] = useRequestStore(
+    useShallow((state) => [state.setRequests, state.requests])
   );
   const { mutateAsync: addFriend, isPending } = useMutation({
     mutationKey: ["add_friend"],
@@ -51,20 +51,51 @@ function SearchUsers() {
       const request = await sendRequest({ receiver: data.id });
       return request;
     },
-    onSuccess(data) {
-      addSentRequest(data);
+    async onSuccess() {
+      const requests = await getRequests();
+      setRequests(requests);
     },
   });
 
   useEffect(() => {
     const updatedResults = result.map((u) => {
-      u.friendStatus = sent.find((req) => req.receiver.id === u.id)
-        ? "pending"
-        : "none";
+      const req = requests.find(
+        (req) => req.sender.id === u.id || req.receiver.id === u.id
+      );
+      u.friendStatus = req?.status ?? "none";
       return u;
     });
     setResult(updatedResults);
-  }, [sent]);
+  }, [requests]);
+
+  const RenderSwitch = ({ friend }: { friend: Friend }) => {
+    switch (true) {
+      case friend.friendStatus === "none":
+        return (
+          <Button
+            size="sm"
+            disabled={isPending}
+            onClick={async () => await addFriend(friend)}
+          >
+            {isPending ? (
+              <Loader2Icon className="animate-spin" />
+            ) : (
+              <UserPlusIcon className="h-4 w-4" />
+            )}
+            Add Friend
+          </Button>
+        );
+      case friend.friendStatus === "pending":
+        return (
+          <Badge variant="secondary" className="flex items-center">
+            <ClockIcon className="h-3 w-3 mr-1" />
+            Pending
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="mb-6">
@@ -112,26 +143,7 @@ function SearchUsers() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    {user.friendStatus === "none" && (
-                      <Button
-                        size="sm"
-                        disabled={isPending}
-                        onClick={async () => await addFriend(user)}
-                      >
-                        {isPending ? (
-                          <Loader2Icon className="animate-spin" />
-                        ) : (
-                          <UserPlusIcon className="h-4 w-4" />
-                        )}
-                        Add Friend
-                      </Button>
-                    )}
-                    {user.friendStatus === "pending" && (
-                      <Badge variant="secondary" className="flex items-center">
-                        <ClockIcon className="h-3 w-3 mr-1" />
-                        Pending
-                      </Badge>
-                    )}
+                    <RenderSwitch friend={user} />
                     <Button
                       variant="ghost"
                       onClick={() =>
