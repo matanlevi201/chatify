@@ -8,6 +8,7 @@ import { RouterProvider } from "react-router-dom";
 import router from "./router";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModalManager } from "./components/modal-manager";
+import ToastWrapper from "./components/toasts/toast-wrapper";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -25,6 +26,7 @@ createRoot(document.getElementById("root")!).render(
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
           <RouterProvider router={router} />
           <ModalManager />
+          <ToastWrapper />
         </ThemeProvider>
       </QueryClientProvider>
     </ClerkProvider>

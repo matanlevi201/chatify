@@ -122,3 +122,23 @@
     @apply bg-background text-foreground;
   }
 }
+
+.Toastify__progress-bar,
+.Toastify__progress-bar--bg,
+.Toastify__progress-bar--animated {
+  background: transparent !important;
+}
+.Toastify__toast {
+  min-height: unset !important;
+  max-width: 450px !important;
+  min-width: 200px;
+  width: auto !important;
+  padding: 0 !important;
+  background: transparent !important;
+  /* box-shadow: none !important; */
+}
+.Toastify__toast-body {
+  min-height: unset !important;
+  padding: 0 !important;
+  width: auto !important;
+}
