@@ -11,7 +11,7 @@ import SearchUsers from "@/components/friends-search";
 function Friends() {
   const { setRequests } = useRequestStore();
   const { isError, isLoading } = useQuery({
-    queryKey: ["get_requets"],
+    queryKey: ["get_requests"],
     queryFn: async () => {
       const data = await getRequests();
       setRequests(data);

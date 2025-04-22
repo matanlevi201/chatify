@@ -11,6 +11,7 @@ export interface ServerToClientEvents {
   "request:cancel": () => void;
   "request:reject": () => void;
   "request:accept": (data: { message: string }) => void;
+  "friend:remove": () => void;
 }
 
 type SocketContextType = {

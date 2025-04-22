@@ -9,7 +9,10 @@ export const removeFriend = async (req: Request, res: Response) => {
     { clerkId: req.auth?.userId },
     { _id: 1, friends: 1 }
   );
-  const friend = await User.findOne({ _id: id }, { _id: 1, friends: 1 });
+  const friend = await User.findOne(
+    { _id: id },
+    { _id: 1, friends: 1, clerkId: 1 }
+  );
   if (!user || !friend) {
     throw new NotFoundError();
   }
@@ -23,6 +26,11 @@ export const removeFriend = async (req: Request, res: Response) => {
       { sender: id, receiver: user.id },
     ],
   });
+  const onlineUsers = req.app.onlineUsers;
+  const friendSocket = onlineUsers.get(friend.clerkId);
+  if (friendSocket) {
+    friendSocket.emit("friend:remove");
+  }
   res.status(200).send();
 };
 

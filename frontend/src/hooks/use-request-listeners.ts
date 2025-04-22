@@ -1,20 +1,17 @@
-import { getRequests } from "@/api/requests";
 import { notification } from "@/lib/notification";
-import { useRequestStore } from "@/stores/use-requests-store";
 import { useSocket } from "@/stores/use-socket-context";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { useShallow } from "zustand/shallow";
 
 export function useRequestListeners() {
-  const setRequests = useRequestStore(useShallow((state) => state.setRequests));
   const { socket, isConnected } = useSocket();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!socket || !isConnected) return;
 
     socket.on("request:send", async (data) => {
-      const requests = await getRequests();
-      setRequests(requests);
+      await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
       notification({
         name: "generic",
         props: {
@@ -26,18 +23,16 @@ export function useRequestListeners() {
     });
 
     socket.on("request:cancel", async () => {
-      const requests = await getRequests();
-      setRequests(requests);
+      await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
     });
 
     socket.on("request:reject", async () => {
-      const requests = await getRequests();
-      setRequests(requests);
+      await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
     });
 
     socket.on("request:accept", async (data) => {
-      const requests = await getRequests();
-      setRequests(requests);
+      await queryClient.invalidateQueries({ queryKey: ["get_friends"] });
+      await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
       notification({
         name: "generic",
         props: {

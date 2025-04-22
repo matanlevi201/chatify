@@ -10,6 +10,7 @@ export interface ServerToClientEvents {
   "request:cancel": () => void;
   "request:reject": () => void;
   "request:accept": (data: { message: string }) => void;
+  "friend:remove": () => void;
 }
 export interface ClientToServerEvents {
   "request:accept": (data: { as: string; we: string }) => void;
