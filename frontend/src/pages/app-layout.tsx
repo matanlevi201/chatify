@@ -5,8 +5,10 @@ import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/api";
 import { useProfileStore } from "@/stores/use-profile-store";
 import { useCurrentUserStore } from "@/stores/use-current-user";
+import { useRequestListeners } from "@/hooks/use-request-listeners";
 
 function AppLayout() {
+  useRequestListeners();
   const { setProfile } = useProfileStore();
   const { setCurrentUser } = useCurrentUserStore();
   const { isError, isLoading } = useQuery({

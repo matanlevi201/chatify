@@ -1,5 +1,9 @@
 import type { Request, Response } from "express";
-import { FriendRequest, RequestStatus } from "../models/friend-request";
+import {
+  FriendRequest,
+  RequestStatus,
+  type PopulatedFriendRequestDoc,
+} from "../models/friend-request";
 import { BadRequestError, NotFoundError } from "../errors";
 import { User } from "../models/user";
 
@@ -18,8 +22,12 @@ export const getAllRequests = async (req: Request, res: Response) => {
 
 export const sendRequest = async (req: Request, res: Response) => {
   const { receiver } = req.body;
-  const sender = await User.findOne({ clerkId: req.auth?.userId }, { _id: 1 });
-  if (!sender) {
+  const sender = await User.findOne(
+    { clerkId: req.auth?.userId },
+    { _id: 1, fullname: 1, avatarUrl: 1 }
+  );
+  const targetUser = await User.findOne({ _id: receiver }, { clerkId: 1 });
+  if (!sender || !targetUser) {
     throw new NotFoundError();
   }
   const existingFriendRequest = await FriendRequest.findOne({
@@ -35,7 +43,15 @@ export const sendRequest = async (req: Request, res: Response) => {
     { path: "sender", select: "id fullname email avatarUrl" },
     { path: "receiver", select: "id fullname email avatarUrl" },
   ]);
-
+  const onlineUsers = req.app.onlineUsers;
+  const targetSocket = onlineUsers.get(targetUser.clerkId);
+  if (targetSocket) {
+    targetSocket.emit("request:send", {
+      fromUser: sender.fullname,
+      avatarUrl: sender.avatarUrl,
+      message: "New Friend Request",
+    });
+  }
   res.status(201).send(newRequest);
 };
 
@@ -45,13 +61,21 @@ export const rejectRequest = async (req: Request, res: Response) => {
   if (!user) {
     throw new NotFoundError();
   }
-  const friendRequest = await FriendRequest.deleteOne({
+  const friendRequest = (await FriendRequest.findOneAndDelete({
     _id: id,
     receiver: user.id,
     status: RequestStatus.PENDING,
-  });
+  }).populate({
+    path: "sender",
+    select: "clerkId",
+  })) as PopulatedFriendRequestDoc | null;
   if (!friendRequest) {
     throw new NotFoundError();
+  }
+  const onlineUsers = req.app.onlineUsers;
+  const targetSocket = onlineUsers.get(friendRequest.sender.clerkId);
+  if (targetSocket) {
+    targetSocket.emit("request:reject");
   }
   res.status(200).send();
 };
@@ -65,11 +89,20 @@ export const acceptRequest = async (req: Request, res: Response) => {
   if (!user) {
     throw new NotFoundError();
   }
-  const friendRequest = await FriendRequest.findOne({
+  const friendRequest = (await FriendRequest.findOne({
     _id: id,
     receiver: user.id,
     status: RequestStatus.PENDING,
-  });
+  }).populate([
+    {
+      path: "sender",
+      select: "clerkId",
+    },
+    {
+      path: "receiver",
+      select: "clerkId",
+    },
+  ])) as PopulatedFriendRequestDoc | null;
   if (!friendRequest) {
     throw new NotFoundError();
   }
@@ -84,6 +117,19 @@ export const acceptRequest = async (req: Request, res: Response) => {
   user.friends.push(sender.id);
   friendRequest.status = RequestStatus.ACCEPTED;
   await Promise.all([sender.save(), user.save(), friendRequest.save()]);
+  const onlineUsers = req.app.onlineUsers;
+  const senderSocket = onlineUsers.get(friendRequest.sender.clerkId);
+  const receiverSocket = onlineUsers.get(friendRequest.receiver.clerkId);
+  if (senderSocket) {
+    senderSocket.emit("request:accept", {
+      message: `You and ${sender.fullname} are now friends`,
+    });
+  }
+  if (receiverSocket) {
+    receiverSocket.emit("request:accept", {
+      message: `You and ${user.fullname} are now friends`,
+    });
+  }
   res.status(200).send();
 };
 
@@ -93,13 +139,21 @@ export const cancelRequest = async (req: Request, res: Response) => {
   if (!user) {
     throw new NotFoundError();
   }
-  const friendRequest = await FriendRequest.deleteOne({
+  const friendRequest = (await FriendRequest.findOneAndDelete({
     _id: id,
     sender: user.id,
     status: RequestStatus.PENDING,
-  });
+  }).populate({
+    path: "receiver",
+    select: "clerkId",
+  })) as PopulatedFriendRequestDoc | null;
   if (!friendRequest) {
     throw new NotFoundError();
+  }
+  const onlineUsers = req.app.onlineUsers;
+  const targetSocket = onlineUsers.get(friendRequest.receiver.clerkId);
+  if (targetSocket) {
+    targetSocket.emit("request:cancel");
   }
   res.status(200).send();
 };

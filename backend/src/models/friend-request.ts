@@ -1,4 +1,5 @@
 import mongoose, { type ObjectId } from "mongoose";
+import { type UserDoc } from "./user";
 
 export enum RequestStatus {
   PENDING = "pending",
@@ -20,7 +21,11 @@ interface FriendRequestDoc extends mongoose.Document {
   receiver: ObjectId;
   status: RequestStatus;
 }
-
+export interface PopulatedFriendRequestDoc
+  extends Omit<FriendRequestDoc, "sender" | "receiver"> {
+  sender: UserDoc;
+  receiver: UserDoc;
+}
 const friendRequestSchema = new mongoose.Schema(
   {
     sender: {

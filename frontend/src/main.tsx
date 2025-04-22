@@ -9,6 +9,7 @@ import router from "./router";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModalManager } from "./components/modal-manager";
 import ToastWrapper from "./components/toasts/toast-wrapper";
+import { SocketProvider } from "./stores/use-socket-context";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -24,9 +25,11 @@ createRoot(document.getElementById("root")!).render(
       <QueryClientProvider client={queryClient}>
         {/* <App /> */}
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-          <RouterProvider router={router} />
-          <ModalManager />
-          <ToastWrapper />
+          <SocketProvider>
+            <RouterProvider router={router} />
+            <ModalManager />
+            <ToastWrapper />
+          </SocketProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </ClerkProvider>
