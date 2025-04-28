@@ -54,7 +54,7 @@ function NavChats({ conversations, isLoading, isError }: NavChatsProps) {
             <SidebarMenuButton
               tooltip={item.name}
               className="px-2.5 py-7.5"
-              onClick={() => navigate("/chat/123")}
+              onClick={() => navigate("/chat/68019379f7c9464af33f9995")}
             >
               <NavChatsItem conversation={item} />
             </SidebarMenuButton>

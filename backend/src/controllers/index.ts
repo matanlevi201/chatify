@@ -1,3 +1,4 @@
+export * from "./device.controller";
 export * from "./friend.controller";
 export * from "./request.controller";
 export * from "./user.controller";

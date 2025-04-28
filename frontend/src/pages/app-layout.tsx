@@ -7,8 +7,10 @@ import { useProfileStore } from "@/stores/use-profile-store";
 import { useCurrentUserStore } from "@/stores/use-current-user";
 import { useRequestListeners } from "@/hooks/use-request-listeners";
 import { useFriendListeners } from "@/hooks/use-friend-listeners";
+import useCreateDevice from "@/hooks/use-create-device";
 
 function AppLayout() {
+  useCreateDevice();
   useRequestListeners();
   useFriendListeners();
   const { setProfile } = useProfileStore();
