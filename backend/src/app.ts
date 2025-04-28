@@ -3,6 +3,7 @@ import express from "express";
 import { json } from "body-parser";
 import { env } from "./config/env";
 import {
+  ConversationRouter,
   DeviceRouter,
   FriendRouter,
   RequestRouter,
@@ -23,6 +24,7 @@ app.use(
   })
 );
 app.use(clerkMiddleware());
+app.use("/api/conversations", ConversationRouter);
 app.use("/api/devices", DeviceRouter);
 app.use("/api/friends", FriendRouter);
 app.use("/api/requests", RequestRouter);

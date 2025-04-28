@@ -9,22 +9,10 @@ import { Button } from "./ui/button";
 import { PlusIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import NavChatsItem from "./nav-chats-item";
+import { Conversation } from "@/stores/use-conversations-store";
 
 interface NavChatsProps {
-  conversations: {
-    id: string;
-    name?: string;
-    isGroup: boolean;
-    avatarUrl?: string;
-    participants: {
-      id: string;
-      fullname: string;
-      avatarUrl: string;
-      status: "online" | "offline" | "away";
-    }[];
-    lastMessage?: string;
-    unseenMessagesCount?: number;
-  }[];
+  conversations: Conversation[];
   isLoading: boolean;
   isError: boolean;
 }
@@ -54,7 +42,7 @@ function NavChats({ conversations, isLoading, isError }: NavChatsProps) {
             <SidebarMenuButton
               tooltip={item.name}
               className="px-2.5 py-7.5"
-              onClick={() => navigate("/chat/68019379f7c9464af33f9995")}
+              onClick={() => navigate(`/chat/${item.id}`)}
             >
               <NavChatsItem conversation={item} />
             </SidebarMenuButton>
