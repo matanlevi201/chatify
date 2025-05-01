@@ -15,24 +15,15 @@ import { Separator } from "./ui/separator";
 import { useProfileStore } from "@/stores/use-profile-store";
 import NavChats from "./nav-chats";
 import { useQuery } from "@tanstack/react-query";
-
-type Conversation = {
-  id: string;
-  name?: string;
-  isGroup: boolean;
-  avatarUrl?: string;
-  participants: {
-    id: string;
-    fullname: string;
-    avatarUrl: string;
-    status: "online" | "offline" | "away";
-  }[];
-  lastMessage?: string;
-  unseenMessagesCount?: number;
-};
+import {
+  Conversation,
+  useConversationsStore,
+} from "@/stores/use-conversation-store";
+import { getConversations } from "@/api/conversations";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { profile } = useProfileStore();
+  const { setConversations } = useConversationsStore();
   const {
     data: conversations,
     isError,
@@ -40,35 +31,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   } = useQuery<Conversation[]>({
     queryKey: ["get_conversations"],
     queryFn: async (): Promise<Conversation[]> => {
-      const data: Conversation[] = [
-        {
-          id: "1",
-          isGroup: false,
-          participants: [
-            {
-              id: "123",
-              fullname: "Full Name",
-              avatarUrl: "/avatar-1.png",
-              status: "online",
-            },
-          ],
-          lastMessage: "LOREM INPUS DOLLOR...",
-        },
-        {
-          id: "2",
-          name: "Our Group",
-          isGroup: true,
-          participants: [
-            {
-              id: "123",
-              fullname: "Full Name",
-              avatarUrl: "/avatar-1/png",
-              status: "online",
-            },
-          ],
-          unseenMessagesCount: 2,
-        },
-      ];
+      const data = await getConversations();
+      setConversations(data);
       return data;
     },
     initialData: [],

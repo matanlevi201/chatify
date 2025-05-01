@@ -33,6 +33,7 @@ export function useRequestListeners() {
     socket.on("request:accept", async (data) => {
       await queryClient.invalidateQueries({ queryKey: ["get_friends"] });
       await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
+      await queryClient.invalidateQueries({ queryKey: ["get_conversations"] });
       notification({
         name: "generic",
         props: {

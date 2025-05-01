@@ -1,20 +1,10 @@
 import { useCurrentUserStore } from "@/stores/use-current-user";
+import { Conversation } from "@/stores/use-conversation-store";
 import AvatarWithStatus from "./avatar-with-status";
 import { UsersIcon } from "lucide-react";
 
 interface ChatHeaderProps {
-  conversation: {
-    id: string;
-    name?: string;
-    isGroup: boolean;
-    avatarUrl?: string;
-    participants: {
-      id: string;
-      fullname: string;
-      avatarUrl: string;
-      status: "online" | "offline" | "away";
-    }[];
-  };
+  conversation: Conversation;
 }
 
 function ChatHeader({ conversation }: ChatHeaderProps) {

@@ -1,10 +1,12 @@
 import AppHeader from "@/components/app-header";
 import { useTheme } from "@/components/theme-provider";
-// import { useParams } from "react-router-dom";
-import { useCurrentUserStore } from "@/stores/use-current-user";
 import ChatMessage from "@/components/chat-message";
 import ChatInput from "@/components/chat-input";
 import ChatHeader from "@/components/chat-header";
+import { useConversationsStore } from "@/stores/use-conversation-store";
+import { useShallow } from "zustand/shallow";
+import { useParams } from "react-router-dom";
+import { Loader2Icon } from "lucide-react";
 
 type Message = {
   id: string;
@@ -18,72 +20,22 @@ type Message = {
   status: "sent" | "seen";
 };
 
-type Conversation = {
-  id: string;
-  name?: string;
-  isGroup: boolean;
-  avatarUrl?: string;
-  participants: {
-    id: string;
-    fullname: string;
-    avatarUrl: string;
-    status: "online" | "offline" | "away";
-  }[];
-};
-
 function Chat() {
-  const { currentUser } = useCurrentUserStore();
-  // const { chatId } = useParams();
+  const { chatId } = useParams();
+  const [conversations] = useConversationsStore(
+    useShallow((state) => [state.conversations])
+  );
+
+  const conversation = conversations.find((conv) => conv.id === chatId);
   const { theme } = useTheme();
-  const messages: Message[] = [
-    {
-      id: "1",
-      sender: {
-        id: currentUser.id,
-        fullname: "My NAME",
-      },
-      sentAt: new Date(),
-      content: `Lorem ipsum dolor, sit amet consectetur adipisicing elit. Autem
-                voluptate at magnam maxime nisi, hic pariatur adipisci molestiae
-                veniam mollitia eveniet, incidunt.`,
-      status: "seen",
-    },
-    {
-      id: "2",
-      sender: {
-        id: "1",
-        fullname: "Firend Name",
-      },
-      sentAt: new Date(),
-      content:
-        "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Autemvoluptate at magnam maxime nisi.",
-      status: "seen",
-    },
-    {
-      id: "3",
-      sender: {
-        id: currentUser.id,
-        fullname: "My NAME",
-      },
-      sentAt: new Date(),
-      content:
-        "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Autemvoluptate at magnam maxime nisi.",
-      status: "sent",
-    },
-  ];
-  const conversation: Conversation = {
-    id: "132",
-    name: "Chat name",
-    isGroup: false,
-    participants: [
-      {
-        id: "123",
-        fullname: "Full Name",
-        avatarUrl: "/avatar-1.png",
-        status: "online",
-      },
-    ],
-  };
+  const messages: Message[] = [];
+
+  if (!conversation)
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <Loader2Icon className="animate-spin" />
+      </div>
+    );
 
   return (
     <div className="flex flex-col h-screen">
