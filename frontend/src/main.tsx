@@ -20,18 +20,16 @@ if (!PUBLISHABLE_KEY) {
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <QueryClientProvider client={queryClient}>
-        {/* <App /> */}
-        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-          <SocketProvider>
-            <RouterProvider router={router} />
-            <ModalManager />
-            <ToastWrapper />
-          </SocketProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </ClerkProvider>
-  </StrictMode>
+  <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+    <QueryClientProvider client={queryClient}>
+      {/* <App /> */}
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <SocketProvider>
+          <RouterProvider router={router} />
+          <ModalManager />
+          <ToastWrapper />
+        </SocketProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  </ClerkProvider>
 );

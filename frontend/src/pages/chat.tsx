@@ -1,10 +1,13 @@
 import AppHeader from "@/components/app-header";
 import { useTheme } from "@/components/theme-provider";
-// import { useParams } from "react-router-dom";
 import { useCurrentUserStore } from "@/stores/use-current-user";
 import ChatMessage from "@/components/chat-message";
 import ChatInput from "@/components/chat-input";
 import ChatHeader from "@/components/chat-header";
+import { useConversationsStore } from "@/stores/use-conversations-store";
+import { useShallow } from "zustand/shallow";
+import { useParams } from "react-router-dom";
+import { Loader2Icon } from "lucide-react";
 
 type Message = {
   id: string;
@@ -18,23 +21,16 @@ type Message = {
   status: "sent" | "seen";
 };
 
-type Conversation = {
-  id: string;
-  name?: string;
-  isGroup: boolean;
-  avatarUrl?: string;
-  participants: {
-    id: string;
-    fullname: string;
-    avatarUrl: string;
-    status: "online" | "offline" | "away";
-  }[];
-};
-
 function Chat() {
+  const { chatId = "" } = useParams();
+  const [conversations] = useConversationsStore(
+    useShallow((state) => [state.conversations])
+  );
+
+  const conversation = conversations.find((conv) => conv.id === chatId);
   const { currentUser } = useCurrentUserStore();
-  // const { chatId } = useParams();
   const { theme } = useTheme();
+
   const messages: Message[] = [
     {
       id: "1",
@@ -71,19 +67,13 @@ function Chat() {
       status: "sent",
     },
   ];
-  const conversation: Conversation = {
-    id: "132",
-    name: "Chat name",
-    isGroup: false,
-    participants: [
-      {
-        id: "123",
-        fullname: "Full Name",
-        avatarUrl: "/avatar-1.png",
-        status: "online",
-      },
-    ],
-  };
+
+  if (!conversation)
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <Loader2Icon className="animate-spin" />
+      </div>
+    );
 
   return (
     <div className="flex flex-col h-screen">
