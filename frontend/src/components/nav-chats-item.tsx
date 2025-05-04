@@ -42,6 +42,14 @@ function NavChatsItem({ conversation }: { conversation: Conversation }) {
     }
   };
 
+  const resolveUserTyping = () => {
+    if (conversation.userTyping) {
+      return conversation.isGroup
+        ? `${conversation.userTyping.fullname} typing...`
+        : "typing..";
+    }
+  };
+
   return (
     <div className="flex grow items-center gap-3">
       <AvatarWithStatus
@@ -61,7 +69,9 @@ function NavChatsItem({ conversation }: { conversation: Conversation }) {
         </div>
 
         <p className="text-sm text-muted-foreground truncate">
-          {conversation.lastMessage?.content ?? "Say Hello..."}
+          {resolveUserTyping() ??
+            conversation.lastMessage?.content ??
+            "Say Hello..."}
         </p>
       </div>
       {conversation.unseenMessagesCount &&

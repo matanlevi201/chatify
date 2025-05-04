@@ -11,10 +11,18 @@ export interface ServerToClientEvents {
   "request:reject": () => void;
   "request:accept": (data: { message: string }) => void;
   "friend:remove": () => void;
+  "typing:start": (data: {
+    conversationId: string;
+    userId: string;
+    fullname: string;
+  }) => void;
+  "typing:end": (data: { conversationId: string }) => void;
 }
 export interface ClientToServerEvents {
   "conversation:join": (data: { id: string }) => Promise<void>;
   "conversation:leave": (data: { id: string }) => Promise<void>;
+  "typing:start": (data: { conversationId: string }) => Promise<void> | void;
+  "typing:end": (data: { conversationId: string }) => void;
 }
 declare global {
   namespace Express {

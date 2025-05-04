@@ -9,6 +9,27 @@ import { Conversation } from "./models/conversation";
 
 const onlineUsers = new Map<string, Socket<ServerToClientEvents>>();
 
+const checkUserIsParticipant = async ({
+  conversationId,
+  clerkId,
+}: {
+  conversationId: string;
+  clerkId: string;
+}) => {
+  const user = await User.findOne({ clerkId });
+  if (!user) {
+    throw new ForbiddenError();
+  }
+  const conversation = await Conversation.findOne({
+    _id: conversationId,
+    participants: user.id,
+  });
+  if (!conversation) {
+    throw new ForbiddenError();
+  }
+  return { user, conversation };
+};
+
 export default function initSocket(server: http.Server) {
   const io = new Server(server, {
     cors: {
@@ -47,39 +68,54 @@ export default function initSocket(server: http.Server) {
       onlineUsers.set(userId, socket);
 
       const conversationJoin = async ({ id }: { id: string }) => {
-        const user = await User.findOne({ clerkId: userId });
-        if (!user) {
-          throw new ForbiddenError();
-        }
-        const conversation = await Conversation.findOne({
-          _id: id,
-          participants: user.id,
+        const { user } = await checkUserIsParticipant({
+          conversationId: id,
+          clerkId: userId,
         });
-        if (!conversation) {
-          throw new ForbiddenError();
-        }
         console.log(`${user.fullname} join room: ${id}`);
         socket.join(id);
       };
 
       const conversationLeave = async ({ id }: { id: string }) => {
-        const user = await User.findOne({ clerkId: userId });
-        if (!user) {
-          throw new ForbiddenError();
-        }
-        const conversation = await Conversation.findOne({
-          _id: id,
-          participants: user.id,
+        const { user } = await checkUserIsParticipant({
+          conversationId: id,
+          clerkId: userId,
         });
-        if (!conversation) {
-          throw new ForbiddenError();
-        }
         console.log(`${user.fullname} leave room: ${id}`);
         socket.leave(id);
       };
 
+      const typingStart = async ({
+        conversationId,
+      }: {
+        conversationId: string;
+      }) => {
+        const { user } = await checkUserIsParticipant({
+          conversationId,
+          clerkId: userId,
+        });
+        socket.broadcast.to(conversationId).emit("typing:start", {
+          conversationId,
+          userId: user.id,
+          fullname: user.fullname,
+        });
+      };
+
+      const typingEnd = async ({
+        conversationId,
+      }: {
+        conversationId: string;
+      }) => {
+        await checkUserIsParticipant({ conversationId, clerkId: userId });
+        socket.broadcast
+          .to(conversationId)
+          .emit("typing:end", { conversationId });
+      };
+
       socket.on("conversation:join", (data) => conversationJoin(data));
       socket.on("conversation:leave", (data) => conversationLeave(data));
+      socket.on("typing:start", (data) => typingStart(data));
+      socket.on("typing:end", (data) => typingEnd(data));
 
       socket.on("disconnect", () => {
         console.log("user disconnect");

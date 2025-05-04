@@ -44,6 +44,13 @@ function ChatHeader({ conversation }: ChatHeaderProps) {
       return participant?.status;
     }
   };
+  const resolveUserTyping = () => {
+    if (conversation.userTyping) {
+      return conversation.isGroup
+        ? `${conversation.userTyping.fullname} typing...`
+        : "typing...";
+    }
+  };
   return (
     <div className="flex gap-2 items-center">
       <AvatarWithStatus
@@ -56,8 +63,12 @@ function ChatHeader({ conversation }: ChatHeaderProps) {
       <div className="flex flex-col justify-center">
         <span className="text-sm font-medium truncate">{resolveName()}</span>
         <span className="text-xs text-muted-foreground">
-          {resolveStatus() ??
-            conversation.participants.map(({ fullname }) => fullname).join(",")}
+          {conversation.userTyping
+            ? resolveUserTyping()
+            : resolveStatus() ??
+              conversation.participants
+                .map(({ fullname }) => fullname)
+                .join(",")}
         </span>
       </div>
     </div>
