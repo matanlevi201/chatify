@@ -13,7 +13,8 @@ export interface ServerToClientEvents {
   "friend:remove": () => void;
 }
 export interface ClientToServerEvents {
-  "request:accept": (data: { as: string; we: string }) => void;
+  "conversation:join": (data: { id: string }) => Promise<void>;
+  "conversation:leave": (data: { id: string }) => Promise<void>;
 }
 declare global {
   namespace Express {

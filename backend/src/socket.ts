@@ -3,7 +3,9 @@ import { verifyToken } from "@clerk/express";
 import http from "http";
 import { ForbiddenError, NotAuthorizedError } from "./errors";
 import { env } from "./config/env";
-import type { ServerToClientEvents } from "./types";
+import type { ClientToServerEvents, ServerToClientEvents } from "./types";
+import { User } from "./models/user";
+import { Conversation } from "./models/conversation";
 
 const onlineUsers = new Map<string, Socket<ServerToClientEvents>>();
 
@@ -36,17 +38,55 @@ export default function initSocket(server: http.Server) {
     }
   );
 
-  io.on("connection", (socket) => {
-    const userId = socket.user.sub;
-    console.log("user connected");
+  io.on(
+    "connection",
+    (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
+      const userId = socket.user.sub;
+      console.log("user connected");
 
-    onlineUsers.set(userId, socket);
+      onlineUsers.set(userId, socket);
 
-    socket.on("disconnect", () => {
-      console.log("user disconnect");
-      onlineUsers.delete(userId);
-    });
-  });
+      const conversationJoin = async ({ id }: { id: string }) => {
+        const user = await User.findOne({ clerkId: userId });
+        if (!user) {
+          throw new ForbiddenError();
+        }
+        const conversation = await Conversation.findOne({
+          _id: id,
+          participants: user.id,
+        });
+        if (!conversation) {
+          throw new ForbiddenError();
+        }
+        console.log(`${user.fullname} join room: ${id}`);
+        socket.join(id);
+      };
+
+      const conversationLeave = async ({ id }: { id: string }) => {
+        const user = await User.findOne({ clerkId: userId });
+        if (!user) {
+          throw new ForbiddenError();
+        }
+        const conversation = await Conversation.findOne({
+          _id: id,
+          participants: user.id,
+        });
+        if (!conversation) {
+          throw new ForbiddenError();
+        }
+        console.log(`${user.fullname} leave room: ${id}`);
+        socket.leave(id);
+      };
+
+      socket.on("conversation:join", (data) => conversationJoin(data));
+      socket.on("conversation:leave", (data) => conversationLeave(data));
+
+      socket.on("disconnect", () => {
+        console.log("user disconnect");
+        onlineUsers.delete(userId);
+      });
+    }
+  );
   console.log("Socket ready ✨");
   return { io, onlineUsers };
 }

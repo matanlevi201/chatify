@@ -14,8 +14,13 @@ export interface ServerToClientEvents {
   "friend:remove": () => void;
 }
 
+export interface ClientToServerEvents {
+  "conversation:join": (data: { id: string }) => void;
+  "conversation:leave": (data: { id: string }) => void;
+}
+
 type SocketContextType = {
-  socket: Socket<ServerToClientEvents> | null;
+  socket: Socket<ServerToClientEvents, ClientToServerEvents> | null;
   isConnected: boolean;
 };
 

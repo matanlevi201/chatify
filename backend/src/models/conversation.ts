@@ -1,10 +1,15 @@
 import mongoose from "mongoose";
+import type { MessageDoc } from "./message";
+import type { UserDoc } from "./user";
 
 interface ConversationAttrs {
   name?: string;
   isGroup: boolean;
   avatarUrl?: string;
   participants: string[];
+  lastMessage?: string;
+  seenBy?: { [key: string]: Date };
+  unseenCounts?: { [key: string]: number };
 }
 
 interface ConversationModel extends mongoose.Model<ConversationDoc> {
@@ -16,6 +21,15 @@ export interface ConversationDoc extends mongoose.Document {
   isGroup: boolean;
   avatarUrl: string;
   participants: string[];
+  lastMessage?: string;
+  seenBy: { [key: string]: Date };
+  unseenCounts: { [key: string]: number };
+}
+
+export interface PopulatedConversationDoc
+  extends Omit<ConversationDoc, "participants" | "lastMessage"> {
+  participants: UserDoc[];
+  lastMessage: MessageDoc;
 }
 
 const conversationSchema = new mongoose.Schema(
@@ -30,6 +44,16 @@ const conversationSchema = new mongoose.Schema(
         default: [],
       },
     ],
+    lastMessage: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Message",
+    },
+    seenBy: {
+      type: Map,
+      of: Date,
+      default: {},
+    },
+    unseenCounts: { type: Map, of: Number, default: {} },
   },
   {
     toJSON: {

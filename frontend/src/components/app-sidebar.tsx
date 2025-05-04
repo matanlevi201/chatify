@@ -20,15 +20,14 @@ import {
   useConversationsStore,
 } from "@/stores/use-conversation-store";
 import { getConversations } from "@/api/conversations";
+import { useShallow } from "zustand/shallow";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { profile } = useProfileStore();
-  const { setConversations } = useConversationsStore();
-  const {
-    data: conversations,
-    isError,
-    isLoading,
-  } = useQuery<Conversation[]>({
+  const [conversations, setConversations] = useConversationsStore(
+    useShallow((state) => [state.conversations, state.setConversations])
+  );
+  const { isError, isLoading } = useQuery<Conversation[]>({
     queryKey: ["get_conversations"],
     queryFn: async (): Promise<Conversation[]> => {
       const data = await getConversations();

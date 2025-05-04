@@ -11,7 +11,11 @@ export type Conversation = {
     avatarUrl: string;
     status: "online" | "offline" | "away";
   }[];
-  lastMessage?: string;
+  lastMessage?: {
+    id: string;
+    content: string;
+    createdAt: Date;
+  };
   unseenMessagesCount?: number;
 };
 

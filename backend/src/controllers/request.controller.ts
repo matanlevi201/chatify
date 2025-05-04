@@ -6,6 +6,7 @@ import {
 } from "../models/friend-request";
 import { BadRequestError, NotFoundError } from "../errors";
 import { User } from "../models/user";
+import { Conversation } from "../models/conversation";
 
 export const getAllRequests = async (req: Request, res: Response) => {
   const user = await User.findOne({ clerkId: req.auth?.userId }, { _id: 1 });
@@ -117,6 +118,11 @@ export const acceptRequest = async (req: Request, res: Response) => {
   user.friends.push(sender.id);
   friendRequest.status = RequestStatus.ACCEPTED;
   await Promise.all([sender.save(), user.save(), friendRequest.save()]);
+  const conversation = Conversation.build({
+    isGroup: false,
+    participants: [user.id, sender.id],
+  });
+  await conversation.save();
   const onlineUsers = req.app.onlineUsers;
   const senderSocket = onlineUsers.get(friendRequest.sender.clerkId);
   const receiverSocket = onlineUsers.get(friendRequest.receiver.clerkId);
