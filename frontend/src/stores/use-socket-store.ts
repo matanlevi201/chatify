@@ -41,6 +41,9 @@ export interface ServerToClientEvents {
   "message:read": (data: {
     user: { id: string; fullname: string; avatarUrl: string };
   }) => Promise<void> | void;
+  "friend:online": (data: { friendId: string }) => void;
+  "friend:offline": (data: { friendId: string }) => void;
+  "friend:away": (data: { friendId: string }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -53,6 +56,9 @@ export interface ClientToServerEvents {
     conversationId: string;
   }) => Promise<void> | void;
   "message:seen": (data: { conversationId: string }) => Promise<void> | void;
+  "friend:online": (data: undefined) => void;
+  "friend:offline": (data: undefined) => void;
+  "friend:away": (data: undefined) => void;
 }
 
 type SocketType = Socket<ServerToClientEvents, ClientToServerEvents> | null;

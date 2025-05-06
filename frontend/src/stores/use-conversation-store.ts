@@ -29,6 +29,10 @@ interface ConversationsState {
   setConversations: (conversations: Conversation[]) => void;
   updateConversation: (id: string, updates: Partial<Conversation>) => void;
   setActiveConversation: (id?: string) => void;
+  setParticipantStatus: (
+    participantId: string,
+    status: Conversation["participants"]["0"]["status"]
+  ) => void;
 }
 
 export const useConversationsStore = create<ConversationsState>((set, get) => ({
@@ -61,4 +65,33 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
       activeConversation:
         get().conversations.find((convo) => convo.id === id) ?? null,
     })),
+  setParticipantStatus: (
+    participantId: string,
+    status: Conversation["participants"]["0"]["status"]
+  ) => {
+    const { activeConversation, conversations } = get();
+    let updatedActiveConversation: Conversation | null = null;
+    const updatedConversations = conversations.map((convo) => {
+      const participantIndex = convo.participants.findIndex(
+        (par) => par.id === participantId
+      );
+
+      if (participantIndex === -1) return convo;
+      const participants = [...convo.participants];
+      participants[participantIndex] = {
+        ...participants[participantIndex],
+        status,
+      };
+      const updatedConvo = { ...convo, participants };
+      if (activeConversation?.id === convo.id) {
+        updatedActiveConversation = updatedConvo;
+      }
+      return updatedConvo;
+    });
+
+    return set(() => ({
+      conversations: updatedConversations,
+      activeConversation: updatedActiveConversation ?? activeConversation,
+    }));
+  },
 }));

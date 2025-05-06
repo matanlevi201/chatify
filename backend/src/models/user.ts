@@ -41,6 +41,10 @@ export interface UserDoc extends mongoose.Document {
   createdAt: Date;
 }
 
+export interface PopulatedUserDoc extends Omit<UserDoc, "friends"> {
+  friends: UserDoc[];
+}
+
 const userSchema = new mongoose.Schema(
   {
     email: { type: String, required: true },

@@ -1,10 +1,10 @@
 import { Server, Socket, type ExtendedError } from "socket.io";
 import { verifyToken } from "@clerk/express";
 import http from "http";
-import { ForbiddenError, NotAuthorizedError } from "./errors";
+import { ForbiddenError, NotAuthorizedError, NotFoundError } from "./errors";
 import { env } from "./config/env";
 import type { ClientToServerEvents, ServerToClientEvents } from "./types";
-import { User } from "./models/user";
+import { User, UserStatus, type PopulatedUserDoc } from "./models/user";
 import { Conversation } from "./models/conversation";
 import { Message, type PopulatedMessageDoc } from "./models/message";
 
@@ -29,6 +29,19 @@ const checkUserIsParticipant = async ({
     throw new ForbiddenError();
   }
   return { user, conversation };
+};
+
+const getUserFriends = async ({ clerkId }: { clerkId: string }) => {
+  const user = (await User.findOne(
+    { clerkId: clerkId },
+    { friends: 1 }
+  ).populate([
+    { path: "friends", select: "clerkId" },
+  ])) as PopulatedUserDoc | null;
+  if (!user) {
+    throw new NotFoundError();
+  }
+  return { user };
 };
 
 export default function initSocket(server: http.Server) {
@@ -62,11 +75,62 @@ export default function initSocket(server: http.Server) {
 
   io.on(
     "connection",
-    (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
+    async (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
       const userId = socket.user.sub;
       console.log("user connected");
-
       onlineUsers.set(userId, socket);
+
+      const userSignin = async () => {
+        const { user } = await getUserFriends({ clerkId: userId });
+        user.status = UserStatus.ONLINE;
+        await user.save();
+        user.friends.forEach((friend) => {
+          const friendSocket = onlineUsers.get(friend.clerkId.toString());
+          if (friendSocket) {
+            friendSocket.emit("friend:online", { friendId: user.id });
+          }
+        });
+        console.log("user:signin");
+      };
+
+      const friendOnline = async (data: undefined) => {
+        const { user } = await getUserFriends({ clerkId: userId });
+        user.status = UserStatus.ONLINE;
+        await user.save();
+        user.friends.forEach((friend) => {
+          const friendSocket = onlineUsers.get(friend.clerkId.toString());
+          if (friendSocket) {
+            friendSocket.emit("friend:online", { friendId: user.id });
+          }
+        });
+        console.log("friend:online");
+      };
+
+      const friendOffline = async (data: undefined) => {
+        const { user } = await getUserFriends({ clerkId: userId });
+        user.status = UserStatus.OFFLINE;
+        await user.save();
+        user.friends.forEach((friend) => {
+          const friendSocket = onlineUsers.get(friend.clerkId.toString());
+          if (friendSocket) {
+            friendSocket.emit("friend:offline", { friendId: user.id });
+          }
+        });
+        console.log("friend:offline");
+      };
+
+      const friendAway = async (data: undefined) => {
+        const { user } = await getUserFriends({ clerkId: userId });
+        user.status = UserStatus.AWAY;
+        await user.save();
+        user.friends.forEach((friend) => {
+          const friendSocket = onlineUsers.get(friend.clerkId.toString());
+          if (friendSocket) {
+            friendSocket.emit("friend:away", { friendId: user.id });
+          }
+        });
+        console.log("friend:away");
+      };
 
       const conversationJoin = async ({ id }: { id: string }) => {
         const { user } = await checkUserIsParticipant({
@@ -195,6 +259,10 @@ export default function initSocket(server: http.Server) {
       socket.on("typing:end", (data) => typingEnd(data));
       socket.on("message:send", (data) => messageSend(data));
       socket.on("message:seen", (data) => messageSeen(data));
+      socket.on("friend:online", (data) => friendOnline(data));
+      socket.on("friend:offline", (data) => friendOffline(data));
+      socket.on("friend:away", (data) => friendAway(data));
+      await userSignin();
 
       socket.on("disconnect", () => {
         console.log("user disconnect");
