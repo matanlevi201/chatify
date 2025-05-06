@@ -7,20 +7,17 @@ import {
 } from "./ui/sidebar";
 import { Button } from "./ui/button";
 import { PlusIcon } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import NavChatsItem from "./nav-chats-item";
 import { Conversation } from "@/stores/use-conversation-store";
 
 interface NavChatsProps {
   conversations: Conversation[];
-  isLoading: boolean;
-  isError: boolean;
 }
 
-function NavChats({ conversations, isLoading, isError }: NavChatsProps) {
+function NavChats({ conversations }: NavChatsProps) {
+  const { chatId } = useParams();
   const navigate = useNavigate();
-  if (isLoading) return;
-  if (isError) return;
 
   return (
     <SidebarGroup>
@@ -41,7 +38,9 @@ function NavChats({ conversations, isLoading, isError }: NavChatsProps) {
           <SidebarMenuItem key={item.id} className="flex items-center">
             <SidebarMenuButton
               tooltip={item.name}
-              className="px-2.5 py-7.5"
+              className={`px-2.5 py-7.5 ${
+                chatId === item.id ? "bg-muted" : ""
+              }`}
               onClick={() => navigate(`/chat/${item.id}`)}
             >
               <NavChatsItem conversation={item} />

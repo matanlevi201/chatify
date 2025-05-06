@@ -9,7 +9,7 @@ interface ConversationAttrs {
   participants: string[];
   lastMessage?: string;
   seenBy?: { [key: string]: Date };
-  unseenCounts?: { [key: string]: number };
+  unseenCounts?: Map<string, number>;
 }
 
 interface ConversationModel extends mongoose.Model<ConversationDoc> {
@@ -23,7 +23,7 @@ export interface ConversationDoc extends mongoose.Document {
   participants: string[];
   lastMessage?: string;
   seenBy: { [key: string]: Date };
-  unseenCounts: { [key: string]: number };
+  unseenCounts: Map<string, number>;
 }
 
 export interface PopulatedConversationDoc

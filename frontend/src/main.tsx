@@ -1,4 +1,3 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 
@@ -9,7 +8,9 @@ import router from "./router";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModalManager } from "./components/modal-manager";
 import ToastWrapper from "./components/toasts/toast-wrapper";
-import { SocketProvider } from "./stores/use-socket-context";
+import InitializeApp from "./components/initializers/initialize-app";
+import InitializeSocket from "./components/initializers/initialize-socket";
+import InitializeListeners from "./components/initializers/initialize-listeners";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -20,18 +21,22 @@ if (!PUBLISHABLE_KEY) {
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <QueryClientProvider client={queryClient}>
-        {/* <App /> */}
-        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-          <SocketProvider>
-            <RouterProvider router={router} />
-            <ModalManager />
-            <ToastWrapper />
-          </SocketProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </ClerkProvider>
-  </StrictMode>
+  // <StrictMode>
+  <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+    <QueryClientProvider client={queryClient}>
+      {/* <App /> */}
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <InitializeApp>
+          <InitializeSocket>
+            <InitializeListeners>
+              <RouterProvider router={router} />
+              <ModalManager />
+              <ToastWrapper />
+            </InitializeListeners>
+          </InitializeSocket>
+        </InitializeApp>
+      </ThemeProvider>
+    </QueryClientProvider>
+  </ClerkProvider>
+  // </StrictMode>
 );

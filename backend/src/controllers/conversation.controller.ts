@@ -5,6 +5,7 @@ import {
 } from "../models/conversation";
 import { NotFoundError } from "../errors";
 import { User } from "../models/user";
+import { Message } from "../models/message";
 
 export const getConversations = async (req: Request, res: Response) => {
   const user = await User.findOne({ clerkId: req.auth?.userId });
@@ -37,4 +38,23 @@ export const getConversations = async (req: Request, res: Response) => {
     unseenMessagesCount: conv.unseenCounts?.[user.id] ?? 0,
   }));
   res.status(200).send(result);
+};
+
+export const conversationMessages = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const user = await User.findOne({ clerkId: req.auth?.userId });
+  if (!user) {
+    throw new NotFoundError();
+  }
+  const conversation = await Conversation.findOne({
+    _id: id,
+    participants: user.id,
+  });
+  if (!conversation) {
+    throw new NotFoundError();
+  }
+  const messages = await Message.find({
+    conversation: conversation.id,
+  }).populate([{ path: "sender" }, { path: "readBy" }]);
+  res.status(200).send(messages);
 };

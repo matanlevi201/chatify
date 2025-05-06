@@ -1,61 +1,95 @@
 import AppHeader from "@/components/app-header";
 import { useTheme } from "@/components/theme-provider";
-import ChatMessage from "@/components/chat-message";
 import ChatInput from "@/components/chat-input";
 import ChatHeader from "@/components/chat-header";
-import { useConversationsStore } from "@/stores/use-conversation-store";
-import { useShallow } from "zustand/shallow";
-import { useParams } from "react-router-dom";
+import {
+  Conversation,
+  useConversationsStore,
+} from "@/stores/use-conversation-store";
 import { Loader2Icon } from "lucide-react";
-
-type Message = {
-  id: string;
-  sender: {
-    id: string;
-    fullname: string;
-    avatarUrl?: string;
-  };
-  sentAt: Date;
-  content: string;
-  status: "sent" | "seen";
-};
+import { Message, useMessagesStore } from "@/stores/use-messages-store";
+import { useQuery } from "@tanstack/react-query";
+import { conversationMessages } from "@/api/conversations";
+import { useParams } from "react-router-dom";
+import { useEffect } from "react";
+import { useResizeDetector } from "react-resize-detector";
+import ChatMessagesBox from "@/components/chat-messages-box";
+import { useSocketStore } from "@/stores/use-socket-store";
 
 function Chat() {
-  const { chatId } = useParams();
-  const [conversations] = useConversationsStore(
-    useShallow((state) => [state.conversations])
-  );
-
-  const conversation = conversations.find((conv) => conv.id === chatId);
   const { theme } = useTheme();
-  const messages: Message[] = [];
+  const { chatId } = useParams();
+  const { height, ref } = useResizeDetector();
+  const setActiveConversation = useConversationsStore(
+    (state) => state.setActiveConversation
+  );
+  const { data, isLoading, isError } = useQuery<{
+    messages: Message[];
+    conversation: Conversation | null;
+  }>({
+    queryKey: ["get_conversation_and_messages"],
+    queryFn: async () => {
+      if (!chatId) return { messages: [], conversation: null };
+      const { conversations } = useConversationsStore.getState();
+      const conversation = conversations.find((convo) => convo.id === chatId);
+      if (!conversation) return { messages: [], conversation: null };
+      const { setMessages } = useMessagesStore.getState();
+      setActiveConversation(chatId);
+      const messages = await conversationMessages(chatId);
+      setMessages(messages);
+      return { messages, conversation };
+    },
+    initialData: { messages: [], conversation: null },
+  });
+  useEffect(() => {
+    const emitMessagesSeen = () => {
+      const { socket, isConnected } = useSocketStore.getState();
+      if (socket && isConnected && chatId) {
+        const { updateConversation } = useConversationsStore.getState();
+        socket.emit("message:seen", { conversationId: chatId });
+        updateConversation(chatId, { unseenMessagesCount: 0 });
+      }
+    };
+    emitMessagesSeen();
+    return () => setActiveConversation();
+  }, []);
 
-  if (!conversation)
+  if (!data.conversation || isLoading)
     return (
       <div className="h-full w-full flex items-center justify-center">
         <Loader2Icon className="animate-spin" />
       </div>
     );
 
+  if (isError) return <div>Error...</div>;
+
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-full">
       <AppHeader>
-        <ChatHeader conversation={conversation} />
+        <ChatHeader />
       </AppHeader>
-      <div className="relative grow h-full flex flex-col items-center">
+      <div className="relative grow flex flex-col items-center">
         <img
-          src={`/${theme}-chat-bg.svg`}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover bg-accent/75 dark:bg-accent/15"
+          src="/light-chat-bg.svg"
+          className={`absolute inset-0 w-full h-full object-cover bg-accent/75 ${
+            theme === "light" ? "block" : "hidden"
+          }`}
+        />
+        <img
+          src="/dark-chat-bg.svg"
+          className={`absolute inset-0 w-full h-full object-cover bg-accent/15 ${
+            theme === "dark" ? "block" : "hidden"
+          }`}
         />
 
-        <div className="container max-w-5xl flex-1 z-10 py-2 flex flex-col gap-4 justify-end">
-          {messages.map((msg) => (
-            <ChatMessage key={`${msg.id}`} {...msg} />
-          ))}
-        </div>
+        <ChatMessagesBox height={height} />
 
-        <ChatInput />
+        <div
+          ref={ref}
+          className="container max-w-3xl flex p-4 absolute bottom-0 items-center gap-2"
+        >
+          <ChatInput />
+        </div>
       </div>
     </div>
   );

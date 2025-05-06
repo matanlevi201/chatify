@@ -1,10 +1,11 @@
 import { notification } from "@/lib/notification";
-import { useSocket } from "@/stores/use-socket-context";
+import { useSocketStore } from "@/stores/use-socket-store";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 export function useRequestListeners() {
-  const { socket, isConnected } = useSocket();
+  const socket = useSocketStore((state) => state.socket);
+  const isConnected = useSocketStore((state) => state.isConnected);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -50,7 +51,7 @@ export function useRequestListeners() {
       socket.off("request:reject");
       socket.off("request:accept");
     };
-  }, [socket, isConnected]);
+  }, []);
 
   return null;
 }

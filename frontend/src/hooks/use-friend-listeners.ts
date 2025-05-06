@@ -1,9 +1,10 @@
-import { useSocket } from "@/stores/use-socket-context";
+import { useSocketStore } from "@/stores/use-socket-store";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 export function useFriendListeners() {
-  const { socket, isConnected } = useSocket();
+  const socket = useSocketStore((state) => state.socket);
+  const isConnected = useSocketStore((state) => state.isConnected);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -17,7 +18,7 @@ export function useFriendListeners() {
     return () => {
       socket.off("friend:remove");
     };
-  }, [socket, isConnected]);
+  }, []);
 
   return null;
 }

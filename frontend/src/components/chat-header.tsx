@@ -1,14 +1,15 @@
 import { useCurrentUserStore } from "@/stores/use-current-user";
-import { Conversation } from "@/stores/use-conversation-store";
+import { useConversationsStore } from "@/stores/use-conversation-store";
 import AvatarWithStatus from "./avatar-with-status";
 import { UsersIcon } from "lucide-react";
 
-interface ChatHeaderProps {
-  conversation: Conversation;
-}
-
-function ChatHeader({ conversation }: ChatHeaderProps) {
+function ChatHeader() {
+  const conversation = useConversationsStore(
+    (state) => state.activeConversation
+  );
   const { currentUser } = useCurrentUserStore();
+
+  if (!conversation) return null;
 
   const resolveName = () => {
     if (conversation.isGroup) {
@@ -51,6 +52,7 @@ function ChatHeader({ conversation }: ChatHeaderProps) {
         : "typing...";
     }
   };
+
   return (
     <div className="flex gap-2 items-center">
       <AvatarWithStatus

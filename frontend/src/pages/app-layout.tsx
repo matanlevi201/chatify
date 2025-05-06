@@ -5,14 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/api";
 import { useProfileStore } from "@/stores/use-profile-store";
 import { useCurrentUserStore } from "@/stores/use-current-user";
-import { useRequestListeners } from "@/hooks/use-request-listeners";
-import { useFriendListeners } from "@/hooks/use-friend-listeners";
-import { useConversationListeners } from "@/hooks/use-conversation-listeners";
 
 function AppLayout() {
-  useRequestListeners();
-  useFriendListeners();
-  useConversationListeners();
   const { setProfile } = useProfileStore();
   const { setCurrentUser } = useCurrentUserStore();
   const { isError, isLoading } = useQuery({

@@ -14,28 +14,11 @@ import { ModeToggle } from "./mode-toggle";
 import { Separator } from "./ui/separator";
 import { useProfileStore } from "@/stores/use-profile-store";
 import NavChats from "./nav-chats";
-import { useQuery } from "@tanstack/react-query";
-import {
-  Conversation,
-  useConversationsStore,
-} from "@/stores/use-conversation-store";
-import { getConversations } from "@/api/conversations";
-import { useShallow } from "zustand/shallow";
+import { useConversationsStore } from "@/stores/use-conversation-store";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { profile } = useProfileStore();
-  const [conversations, setConversations] = useConversationsStore(
-    useShallow((state) => [state.conversations, state.setConversations])
-  );
-  const { isError, isLoading } = useQuery<Conversation[]>({
-    queryKey: ["get_conversations"],
-    queryFn: async (): Promise<Conversation[]> => {
-      const data = await getConversations();
-      setConversations(data);
-      return data;
-    },
-    initialData: [],
-  });
+  const conversations = useConversationsStore((state) => state.conversations);
 
   const data = {
     user: {
@@ -70,11 +53,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent className="bg-background gap-0">
         <NavMain navs={data.navs} />
-        <NavChats
-          conversations={conversations}
-          isLoading={isLoading}
-          isError={isError}
-        />
+        <NavChats conversations={conversations} />
       </SidebarContent>
       <Separator className="h-1" />
       <SidebarFooter className="bg-background">

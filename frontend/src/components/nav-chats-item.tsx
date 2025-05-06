@@ -1,10 +1,12 @@
-import { formatRelativeShort } from "@/lib/utils";
 import AvatarWithStatus from "./avatar-with-status";
 import { useCurrentUserStore } from "@/stores/use-current-user";
 import { UsersIcon } from "lucide-react";
 import { Conversation } from "@/stores/use-conversation-store";
+import { formatDistanceToNow } from "date-fns";
+import { useNowUpdate } from "@/hooks/use-now-update";
 
 function NavChatsItem({ conversation }: { conversation: Conversation }) {
+  useNowUpdate();
   const { currentUser } = useCurrentUserStore();
 
   const resolveName = () => {
@@ -51,7 +53,7 @@ function NavChatsItem({ conversation }: { conversation: Conversation }) {
   };
 
   return (
-    <div className="flex grow items-center gap-3">
+    <div className="flex grow items-center gap-3 truncate">
       <AvatarWithStatus
         url={resolveAvatarUrl()}
         name={resolveName()}
@@ -63,7 +65,7 @@ function NavChatsItem({ conversation }: { conversation: Conversation }) {
           <span className="font-medium truncate">{resolveName()}</span>
           {conversation.lastMessage && (
             <span className="text-xs text-muted-foreground">
-              {formatRelativeShort(conversation.lastMessage.createdAt)}
+              {formatDistanceToNow(conversation.lastMessage.createdAt)}
             </span>
           )}
         </div>

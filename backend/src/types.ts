@@ -1,5 +1,6 @@
 import type { AuthObject } from "@clerk/express";
 import type { Socket } from "socket.io";
+import type { PopulatedMessageDoc } from "./models/message";
 
 export interface ServerToClientEvents {
   "request:send": (data: {
@@ -17,12 +18,27 @@ export interface ServerToClientEvents {
     fullname: string;
   }) => void;
   "typing:end": (data: { conversationId: string }) => void;
+  "message:new": (data: {
+    message: PopulatedMessageDoc;
+    unseenCounts: Map<string, number>;
+  }) => Promise<void> | void;
+  "message:sent": (data: {
+    message: PopulatedMessageDoc;
+  }) => Promise<void> | void;
+  "message:read": (data: {
+    user: { id: string; fullname: string; avatarUrl: string };
+  }) => Promise<void> | void;
 }
 export interface ClientToServerEvents {
   "conversation:join": (data: { id: string }) => Promise<void>;
   "conversation:leave": (data: { id: string }) => Promise<void>;
   "typing:start": (data: { conversationId: string }) => Promise<void> | void;
   "typing:end": (data: { conversationId: string }) => void;
+  "message:send": (data: {
+    content: string;
+    conversationId: string;
+  }) => Promise<void> | void;
+  "message:seen": (data: { conversationId: string }) => Promise<void> | void;
 }
 declare global {
   namespace Express {
