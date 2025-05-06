@@ -5,6 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/api";
 import { useProfileStore } from "@/stores/use-profile-store";
 import { useCurrentUserStore } from "@/stores/use-current-user";
+import InitializeApp from "@/components/initializers/initialize-app";
+import InitializeSocket from "@/components/initializers/initialize-socket";
+import InitializeListeners from "@/components/initializers/initialize-listeners";
 
 function AppLayout() {
   const { setProfile } = useProfileStore();
@@ -27,12 +30,18 @@ function AppLayout() {
   if (isLoading) return;
   if (isError) return;
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Outlet />
-      </SidebarInset>
-    </SidebarProvider>
+    <InitializeApp>
+      <InitializeSocket>
+        <InitializeListeners>
+          <SidebarProvider>
+            <AppSidebar />
+            <SidebarInset>
+              <Outlet />
+            </SidebarInset>
+          </SidebarProvider>
+        </InitializeListeners>
+      </InitializeSocket>
+    </InitializeApp>
   );
 }
 

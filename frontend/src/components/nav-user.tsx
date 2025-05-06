@@ -33,7 +33,9 @@ export function NavUser({
             <span className="truncate text-xs">{user.email}</span>
           </div>
           <Button
-            onClick={() => signOut()}
+            onClick={async () => {
+              await signOut();
+            }}
             variant="ghost"
             size="icon"
             className=" text-red-500 hover:text-red-500 hover:bg-red-500/15"
