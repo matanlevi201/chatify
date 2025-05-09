@@ -142,3 +142,7 @@
   padding: 0 !important;
   width: auto !important;
 }
+
+.epr-dark-theme .epr-body {
+  scrollbar-color: #555 #333333;
+}

@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useEffect, useRef } from "react";
 import { useMessagesStore } from "@/stores/use-messages-store";
 import ChatMessage from "./chat-message";
 import { useConversationsStore } from "@/stores/use-conversation-store";
@@ -15,12 +15,21 @@ function ChatMessagesBoxComponent({
   messages: Message[];
   height?: number;
 }) {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!messages.length) return;
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+  }, [messages, height]);
+
   return (
     <ScrollArea
       className="container max-w-5xl"
-      style={{ maxHeight: `calc(100vh - ${height ? height + 96 : 0}px)` }}
+      style={{
+        maxHeight: `calc(100vh - ${height ? height + 80 : height}px)`,
+      }}
     >
-      <div className="space-y-2.5 p-2.5 pb-0">
+      <div className="space-y-2.5 p-2.5 pb-0 [@media(max-width:500px)]:px-0">
         {messages.map((msg) => (
           <ChatMessage
             key={msg.id}
@@ -28,6 +37,7 @@ function ChatMessagesBoxComponent({
             conversation={activeConversation}
           />
         ))}
+        <div ref={messagesEndRef} />
       </div>
     </ScrollArea>
   );

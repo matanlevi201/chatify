@@ -1,6 +1,5 @@
 import AppHeader from "@/components/app-header";
 import { useTheme } from "@/components/theme-provider";
-import ChatInput from "@/components/chat-input";
 import ChatHeader from "@/components/chat-header";
 import {
   Conversation,
@@ -15,6 +14,7 @@ import { useEffect } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import ChatMessagesBox from "@/components/chat-messages-box";
 import { useSocketStore } from "@/stores/use-socket-store";
+import ChatTextBox from "@/components/chat-text-box/chat-text-box";
 
 function Chat() {
   const { theme } = useTheme();
@@ -86,9 +86,9 @@ function Chat() {
 
         <div
           ref={ref}
-          className="container max-w-3xl flex p-4 absolute bottom-0 items-center gap-2"
+          className="container max-w-3xl flex p-2 absolute bottom-0 items-center gap-2"
         >
-          <ChatInput />
+          <ChatTextBox />
         </div>
       </div>
     </div>
