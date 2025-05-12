@@ -1,68 +1,33 @@
+import { User, type UserUpdateAttrs } from "../models/user";
 import type { Request, Response } from "express";
-import { deleteObject, getObject, postObject } from "../externals/storage";
-import { BadRequestError, NotFoundError } from "../errors";
-import { User } from "../models/user";
+import { getObject } from "../externals/storage";
+import { NotFoundError } from "../errors";
 import { env } from "../config/env";
-import sharp from "sharp";
-import { v4 } from "uuid";
 import { Types } from "mongoose";
-
-const swapAvatars = async (
-  userId: string,
-  buffer: Buffer,
-  mimetype: string,
-  prevKey?: string
-) => {
-  const processedImage = await sharp(buffer)
-    .resize(256, 256, { fit: "cover" })
-    .toFormat("png")
-    .toBuffer();
-
-  const uniquePrefix = `${Date.now()}-${v4()}`;
-  const key = `${uniquePrefix}-${userId}.png`;
-
-  const url = await postObject({
-    fileKey: key,
-    content: processedImage,
-    mimetype: mimetype,
-  });
-  if (!url) {
-    throw new BadRequestError("Failed to upload avatar");
-  }
-  if (prevKey) await deleteObject({ fileKey: prevKey });
-  return { key };
-};
+import {
+  findByClerkId,
+  getUserProfileView,
+  swapAvatarsByClerkId,
+  updateByClerkId,
+} from "../services/user.service";
 
 export const getCurrentUser = async (req: Request, res: Response) => {
-  const user = await User.findOne({ clerkId: req.auth?.userId });
-  if (!user) {
-    throw new NotFoundError();
-  }
+  const user = await findByClerkId(req.auth?.userId!);
   res.status(200).send(user);
 };
 
 export const setProfile = async (req: Request, res: Response) => {
+  const clerkId = req.auth?.userId!;
   const { fullname, bio } = req.body;
-  const user = await User.findOne({ clerkId: req.auth?.userId });
-  if (!user) {
-    throw new NotFoundError();
-  }
+  const updates: Partial<UserUpdateAttrs> = { fullname, bio };
   if (req.file) {
-    const { key } = await swapAvatars(
-      user?.id,
-      req.file.buffer,
-      req.file.mimetype,
-      user.avatarKey
-    );
-    user.avatarUrl = `${env.BACKEND_URL}/api/users/profile/avatar/${key}`;
-    user.avatarKey = key;
+    const { key } = await swapAvatarsByClerkId(clerkId, req.file);
+    updates.avatarUrl = `${env.BACKEND_URL}/api/users/profile/avatar/${key}`;
+    updates.avatarKey = key;
   }
-  user.fullname = fullname;
-  user.bio = bio;
-  const updatedUser = await user.save();
+  const updatedUser = await updateByClerkId(clerkId, updates);
   res.status(200).send({
-    displayName: updatedUser.fullname,
-    email: updatedUser.email,
+    fullname: updatedUser.fullname,
     avatarUrl: updatedUser.avatarUrl,
     bio: updatedUser.bio,
   });
@@ -70,10 +35,7 @@ export const setProfile = async (req: Request, res: Response) => {
 
 export const getAvatar = async (req: Request, res: Response) => {
   const { key } = req.params;
-  const user = await User.findOne({ clerkId: req.auth?.userId });
-  if (!user) {
-    throw new NotFoundError();
-  }
+  await findByClerkId(req.auth?.userId!);
   try {
     const stream = await getObject({
       fileKey: key ?? "",
@@ -88,11 +50,9 @@ export const getAvatar = async (req: Request, res: Response) => {
 
 export const searchUsers = async (req: Request, res: Response) => {
   const { q } = req.query;
-  const user = await User.findOne({ clerkId: req.auth?.userId });
-  if (!user) {
-    throw new NotFoundError();
-  }
+  const user = await findByClerkId(req.auth?.userId!);
   const users = await User.aggregate([
+    // Step 1: Match users based on query and exclude current user
     {
       $match: {
         $and: [
@@ -106,6 +66,7 @@ export const searchUsers = async (req: Request, res: Response) => {
         ],
       },
     },
+    // Step 2: Lookup friend requests
     {
       $lookup: {
         from: "friendrequests",
@@ -146,6 +107,7 @@ export const searchUsers = async (req: Request, res: Response) => {
       },
     },
     {
+      // Step 3: Project the desired fields
       $project: {
         _id: 0,
         id: "$_id",
@@ -167,31 +129,7 @@ export const searchUsers = async (req: Request, res: Response) => {
 
 export const getUser = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const [user, currentUser] = await Promise.all([
-    User.findOne({ _id: id }),
-    User.findOne({ clerkId: req.auth?.userId }),
-  ]);
-
-  if (!user) {
-    throw new NotFoundError();
-  }
-
-  const userFriends = user.friends || [];
-  const currentUserFriends = currentUser?.friends || [];
-
-  const mutualFriends = userFriends.filter((friendId) =>
-    currentUserFriends.some((id) => id.toString() === friendId.toString())
-  );
-
-  const userWithMutualCount = {
-    id: user.id,
-    bio: user.bio,
-    email: user.email,
-    status: user.status,
-    fullname: user.fullname,
-    avatarUrl: user.avatarUrl,
-    createdAt: user.createdAt,
-    mutualFriends: mutualFriends.length,
-  };
+  const clerkId = req.auth?.userId!;
+  const userWithMutualCount = await getUserProfileView(clerkId, id);
   res.status(200).send(userWithMutualCount);
 };

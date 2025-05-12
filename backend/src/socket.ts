@@ -1,48 +1,23 @@
-import { Server, Socket, type ExtendedError } from "socket.io";
-import { verifyToken } from "@clerk/express";
-import http from "http";
-import { ForbiddenError, NotAuthorizedError, NotFoundError } from "./errors";
-import { env } from "./config/env";
 import type { ClientToServerEvents, ServerToClientEvents } from "./types";
-import { User, UserStatus, type PopulatedUserDoc } from "./models/user";
-import { Conversation } from "./models/conversation";
-import { Message, type PopulatedMessageDoc } from "./models/message";
+import { Server, Socket, type ExtendedError } from "socket.io";
+import { ForbiddenError, NotAuthorizedError } from "./errors";
+import { verifyToken } from "@clerk/express";
+import { env } from "./config/env";
+import http from "http";
+import {
+  handleConversationJoin,
+  handleConversationLeave,
+  handleFriendAway,
+  handleFriendOffline,
+  handleFriendOnline,
+  handleMessageSeen,
+  handleMessageSend,
+  handleTypingEnd,
+  handleTypingStart,
+} from "./events/listeners";
 
-const onlineUsers = new Map<string, Socket<ServerToClientEvents>>();
-
-const checkUserIsParticipant = async ({
-  conversationId,
-  clerkId,
-}: {
-  conversationId: string;
-  clerkId: string;
-}) => {
-  const user = await User.findOne({ clerkId });
-  if (!user) {
-    throw new ForbiddenError();
-  }
-  const conversation = await Conversation.findOne({
-    _id: conversationId,
-    participants: user.id,
-  });
-  if (!conversation) {
-    throw new ForbiddenError();
-  }
-  return { user, conversation };
-};
-
-const getUserFriends = async ({ clerkId }: { clerkId: string }) => {
-  const user = (await User.findOne(
-    { clerkId: clerkId },
-    { friends: 1 }
-  ).populate([
-    { path: "friends", select: "clerkId" },
-  ])) as PopulatedUserDoc | null;
-  if (!user) {
-    throw new NotFoundError();
-  }
-  return { user };
-};
+export const onlineUsers = new Map<string, Socket<ServerToClientEvents>>();
+export const activeRooms = new Map<string, string>();
 
 export default function initSocket(server: http.Server) {
   const io = new Server(server, {
@@ -80,192 +55,45 @@ export default function initSocket(server: http.Server) {
       console.log("user connected");
       onlineUsers.set(userId, socket);
 
-      const userSignin = async () => {
-        const { user } = await getUserFriends({ clerkId: userId });
-        user.status = UserStatus.ONLINE;
-        await user.save();
-        user.friends.forEach((friend) => {
-          const friendSocket = onlineUsers.get(friend.clerkId.toString());
-          if (friendSocket) {
-            friendSocket.emit("friend:online", { friendId: user.id });
-          }
-        });
-        console.log("user:signin");
-      };
-
-      const friendOnline = async (data: undefined) => {
-        const { user } = await getUserFriends({ clerkId: userId });
-        user.status = UserStatus.ONLINE;
-        await user.save();
-        user.friends.forEach((friend) => {
-          const friendSocket = onlineUsers.get(friend.clerkId.toString());
-          if (friendSocket) {
-            friendSocket.emit("friend:online", { friendId: user.id });
-          }
-        });
-        console.log("friend:online");
-      };
-
-      const friendOffline = async (data: undefined) => {
-        const { user } = await getUserFriends({ clerkId: userId });
-        user.status = UserStatus.OFFLINE;
-        await user.save();
-        user.friends.forEach((friend) => {
-          const friendSocket = onlineUsers.get(friend.clerkId.toString());
-          if (friendSocket) {
-            friendSocket.emit("friend:offline", { friendId: user.id });
-          }
-        });
-        console.log("friend:offline");
-      };
-
-      const friendAway = async (data: undefined) => {
-        const { user } = await getUserFriends({ clerkId: userId });
-        user.status = UserStatus.AWAY;
-        await user.save();
-        user.friends.forEach((friend) => {
-          const friendSocket = onlineUsers.get(friend.clerkId.toString());
-          if (friendSocket) {
-            friendSocket.emit("friend:away", { friendId: user.id });
-          }
-        });
-        console.log("friend:away");
-      };
-
-      const conversationJoin = async ({ id }: { id: string }) => {
-        const { user } = await checkUserIsParticipant({
-          conversationId: id,
-          clerkId: userId,
-        });
-        console.log(`${user.fullname} join room`);
-        socket.join(id);
-      };
-
-      const conversationLeave = async ({ id }: { id: string }) => {
-        const { user } = await checkUserIsParticipant({
-          conversationId: id,
-          clerkId: userId,
-        });
-        console.log(`${user.fullname} leave room`);
-        socket.leave(id);
-      };
-
-      const typingStart = async ({
-        conversationId,
-      }: {
-        conversationId: string;
-      }) => {
-        const { user } = await checkUserIsParticipant({
-          conversationId,
-          clerkId: userId,
-        });
-        socket.broadcast.to(conversationId).emit("typing:start", {
-          conversationId,
-          userId: user.id,
-          fullname: user.fullname,
-        });
-        console.log("typing:start");
-      };
-
-      const typingEnd = async ({
-        conversationId,
-      }: {
-        conversationId: string;
-      }) => {
-        await checkUserIsParticipant({ conversationId, clerkId: userId });
-        socket.broadcast
-          .to(conversationId)
-          .emit("typing:end", { conversationId });
-        console.log("typing:end");
-      };
-
-      const messageSend = async ({
-        content,
-        conversationId,
-      }: {
-        content: string;
-        conversationId: string;
-      }) => {
-        const { user, conversation } = await checkUserIsParticipant({
-          conversationId,
-          clerkId: userId,
-        });
-        const newMessage = Message.build({
-          sender: user.id,
-          content,
-          conversation: conversationId,
-          readBy: [],
-        });
-        await newMessage.save();
-        const message = (await newMessage.populate([
-          { path: "sender" },
-          { path: "readBy" },
-        ])) as PopulatedMessageDoc;
-        conversation.lastMessage = message.id;
-        conversation.participants.map((par) => {
-          const participantId = par.toString();
-          const unseenCount = conversation.unseenCounts.get(participantId) ?? 0;
-
-          if (participantId !== user.id) {
-            conversation.unseenCounts.set(participantId, unseenCount + 1);
-          }
-        });
-        await conversation.save();
-        socket.broadcast.to(conversationId).emit("message:new", {
-          message,
-          unseenCounts: conversation.unseenCounts,
-        });
-        socket.emit("message:sent", { message });
-        console.log("messagea:new:sent");
-      };
-
-      const messageSeen = async ({
-        conversationId,
-      }: {
-        conversationId: string;
-      }) => {
-        const { user, conversation } = await checkUserIsParticipant({
-          conversationId,
-          clerkId: userId,
-        });
-        const result = await Message.updateMany(
-          {
-            conversation: conversationId,
-            sender: { $ne: user.id },
-            readBy: { $ne: user.id },
-          },
-          {
-            $addToSet: { readBy: user.id },
-          }
-        );
-        conversation.unseenCounts.set(user.id, 0);
-        await conversation.save();
-
-        if (result.modifiedCount > 0) {
-          socket.broadcast.to(conversationId).emit("message:read", {
-            user: {
-              id: user.id,
-              fullname: user.fullname,
-              avatarUrl: user.avatarUrl,
-            },
-          });
-          console.log("message:read");
-        }
-      };
-
-      socket.on("conversation:join", (data) => conversationJoin(data));
-      socket.on("conversation:leave", (data) => conversationLeave(data));
-      socket.on("typing:start", (data) => typingStart(data));
-      socket.on("typing:end", (data) => typingEnd(data));
-      socket.on("message:send", (data) => messageSend(data));
-      socket.on("message:seen", (data) => messageSeen(data));
-      socket.on("friend:online", (data) => friendOnline(data));
-      socket.on("friend:offline", (data) => friendOffline(data));
-      socket.on("friend:away", (data) => friendAway(data));
-      await userSignin();
-
+      socket.on("conversation:join", (data) =>
+        handleConversationJoin(socket, { ...data, clerkId: userId })
+      );
+      socket.on("conversation:leave", (data) =>
+        handleConversationLeave(socket, { ...data, clerkId: userId })
+      );
+      socket.on("typing:start", (data) =>
+        handleTypingStart(socket, { ...data, clerkId: userId })
+      );
+      socket.on("typing:end", (data) =>
+        handleTypingEnd(socket, { ...data, clerkId: userId })
+      );
+      socket.on("message:send", (data) =>
+        handleMessageSend(socket, { ...data, clerkId: userId })
+      );
+      socket.on("message:seen", (data) =>
+        handleMessageSeen(socket, { ...data, clerkId: userId })
+      );
+      socket.on("friend:online", () =>
+        handleFriendOnline(socket, { clerkId: userId })
+      );
+      socket.on("friend:offline", () =>
+        handleFriendOffline(socket, { clerkId: userId })
+      );
+      socket.on("friend:away", () =>
+        handleFriendAway(socket, { clerkId: userId })
+      );
+      await handleFriendOnline(socket, { clerkId: userId });
       socket.on("disconnect", () => {
         console.log("user disconnect");
+        socket.off("conversation:join", handleConversationJoin);
+        socket.off("conversation:leave", handleConversationLeave);
+        socket.off("typing:start", handleTypingStart);
+        socket.off("typing:end", handleTypingEnd);
+        socket.off("message:send", handleMessageSend);
+        socket.off("message:seen", handleMessageSeen);
+        socket.off("friend:online", handleFriendOnline);
+        socket.off("friend:offline", handleFriendOffline);
+        socket.off("friend:away", handleFriendAway);
         onlineUsers.delete(userId);
       });
     }

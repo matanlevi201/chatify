@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Textarea } from "../ui/textarea";
 import { useChatTextBoxState } from "./chat-text-box-store";
 import { useSocketStore } from "@/stores/use-socket-store";
-import { useConversationsStore } from "@/stores/use-conversation-store";
 import { useDebounce } from "use-debounce";
+import { useActiveConversation } from "@/stores/use-active-conversation";
 
 function ChatTextarea() {
   const content = useChatTextBoxState((state) => state.content);
@@ -17,7 +17,7 @@ function ChatTextarea() {
 
   const socket = useSocketStore((state) => state.socket);
   const isConnected = useSocketStore((state) => state.isConnected);
-  const activeConversation = useConversationsStore(
+  const activeConversation = useActiveConversation(
     (state) => state.activeConversation
   );
 

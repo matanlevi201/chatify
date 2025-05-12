@@ -12,8 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useProfileStore } from "@/stores/use-profile-store";
-import { useMutation } from "@tanstack/react-query";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { setUserProfile } from "@/lib/query-current-user-utils";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CheckIcon, Loader2Icon } from "lucide-react";
 import { useState } from "react";
 
@@ -31,7 +32,7 @@ const inputs: Field<SetProfileSchema>[] = [
     description: "Email cannot be changed",
   },
   {
-    name: "displayName",
+    name: "fullname",
     type: "text",
     label: "Display Name",
     placeholder: "Enter your display name",
@@ -46,17 +47,18 @@ const inputs: Field<SetProfileSchema>[] = [
 ];
 
 function MyProfile() {
-  const { profile, setProfile: setGlobalProfile } = useProfileStore();
+  const queryClient = useQueryClient();
+  const { currentUser } = useCurrentUser();
   const [isEditing, setIsEditing] = useState(false);
 
   const { mutateAsync, isPending } = useMutation({
     mutationKey: ["set_profile"],
     mutationFn: async (data: SetProfileSchema) => {
-      return await setProfile({ ...data, fullname: data.displayName });
+      return await setProfile({ ...data, fullname: data.fullname });
     },
     onSuccess(data: SetProfileSchema) {
       setIsEditing(false);
-      setGlobalProfile(data);
+      setUserProfile(queryClient, data);
     },
   });
 
@@ -107,9 +109,9 @@ function MyProfile() {
               buttons={isEditing ? onEditbuttons : buttons}
               disabled={!isEditing}
               defaultValues={{
-                email: profile.email,
-                displayName: profile.displayName,
-                bio: profile.bio,
+                email: currentUser.email,
+                fullname: currentUser.fullname,
+                bio: currentUser.bio,
               }}
               onSubmit={save}
             />

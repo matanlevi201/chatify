@@ -7,17 +7,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ModeToggle } from "@/components/mode-toggle";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import FormUpdateProfile, {
   Field,
   FormButton,
   SetProfileSchema,
 } from "@/components/form-update-profile";
-import { useProfileStore } from "@/stores/use-profile-store";
 import { setProfile } from "@/api";
 import { Button } from "@/components/ui/button";
 import ToggleWrapper from "@/components/toggle-wrapper";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { setUserProfile } from "@/lib/query-current-user-utils";
 
 const inputs: Field<SetProfileSchema>[] = [
   {
@@ -25,7 +26,7 @@ const inputs: Field<SetProfileSchema>[] = [
     type: "avatar",
   },
   {
-    name: "displayName",
+    name: "fullname",
     type: "text",
     label: "Display Name",
     placeholder: "Enter your display name",
@@ -34,15 +35,16 @@ const inputs: Field<SetProfileSchema>[] = [
 ];
 
 function ProfileSetup() {
-  const { profile, setProfile: setGlobalProfile } = useProfileStore();
+  const queryClient = useQueryClient();
+  const { currentUser } = useCurrentUser();
   const navigate = useNavigate();
   const { mutateAsync, isPending } = useMutation({
     mutationKey: ["set_profile"],
     mutationFn: async (values: SetProfileSchema) => {
-      return await setProfile({ ...values, fullname: values.displayName });
+      return await setProfile({ ...values, fullname: values.fullname });
     },
     onSuccess(newData: SetProfileSchema) {
-      setGlobalProfile(newData);
+      setUserProfile(queryClient, newData);
       navigate("/");
     },
   });
@@ -91,8 +93,8 @@ function ProfileSetup() {
             buttons={buttons}
             onSubmit={saveAndContinue}
             defaultValues={{
-              displayName: profile.displayName,
-              bio: profile.bio,
+              fullname: currentUser.fullname,
+              bio: currentUser.bio,
             }}
           />
         </CardContent>

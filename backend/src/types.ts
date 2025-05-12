@@ -10,7 +10,7 @@ export interface ServerToClientEvents {
   }) => void;
   "request:cancel": () => void;
   "request:reject": () => void;
-  "request:accept": (data: { message: string }) => void;
+  "request:accept": (data: { message: string; conversationId: string }) => void;
   "friend:remove": () => void;
   "typing:start": (data: {
     conversationId: string;
@@ -31,6 +31,7 @@ export interface ServerToClientEvents {
   "friend:online": (data: { friendId: string }) => void;
   "friend:offline": (data: { friendId: string }) => void;
   "friend:away": (data: { friendId: string }) => void;
+  error: (data: { msg: string }) => void;
 }
 export interface ClientToServerEvents {
   "conversation:join": (data: { id: string }) => Promise<void>;

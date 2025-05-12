@@ -4,9 +4,9 @@ import { useRef, useState } from "react";
 import { Label } from "./ui/label";
 import { cn } from "@/lib/utils";
 import { useFormContext, Controller } from "react-hook-form";
-import { useProfileStore } from "@/stores/use-profile-store";
 import { Separator } from "./ui/separator";
 import { FormMessage } from "./ui/form";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 const DEFAULT_AVATARS = [
   "avatar-1.png",
@@ -30,7 +30,7 @@ type Props = {
 };
 
 function AvatarSelection({ name, disabled }: Props) {
-  const { profile } = useProfileStore();
+  const { currentUser } = useCurrentUser();
   const { control, setValue } = useFormContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -68,17 +68,19 @@ function AvatarSelection({ name, disabled }: Props) {
               <div>
                 <Avatar className="h-32 w-32 border-4 border-background shadow-md">
                   <AvatarImage
-                    src={profile.avatarUrl || "/placeholder.svg"}
+                    src={currentUser.avatarUrl || "/placeholder.svg"}
                     alt="Profile"
                   />
                   <AvatarFallback className="text-4xl">
-                    {profile.displayName.charAt(0)}
+                    {currentUser.fullname.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
               </div>
               <div className="text-center">
-                <h2 className="text-xl font-bold">{profile.displayName}</h2>
-                <p className="text-sm text-muted-foreground">{profile.email}</p>
+                <h2 className="text-xl font-bold">{currentUser.fullname}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {currentUser.email}
+                </p>
               </div>
             </>
           ) : (
@@ -86,7 +88,9 @@ function AvatarSelection({ name, disabled }: Props) {
               <div className="relative group">
                 <Avatar className="h-24 w-24 border-4 border-background shadow-md">
                   <AvatarImage
-                    src={avatarUrl || profile.avatarUrl || "/placeholder.svg"}
+                    src={
+                      avatarUrl || currentUser.avatarUrl || "/placeholder.svg"
+                    }
                     alt="Profile"
                   />
                   <AvatarFallback className="text-2xl">

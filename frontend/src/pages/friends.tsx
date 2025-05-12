@@ -1,23 +1,13 @@
-import { getRequests } from "@/api/requests";
 import AllFriends from "@/components/friends-all";
 import AppHeader from "@/components/app-header";
 import IncomingRequests from "@/components/friends-incoming-requests";
 import SentRequests from "@/components/friends-sent-requests";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRequestStore } from "@/stores/use-requests-store";
-import { useQuery } from "@tanstack/react-query";
 import SearchUsers from "@/components/friends-search";
+import { useRequests } from "@/hooks/use-requests";
 
 function Friends() {
-  const { setRequests } = useRequestStore();
-  const { isError, isLoading } = useQuery({
-    queryKey: ["get_requests"],
-    queryFn: async () => {
-      const data = await getRequests();
-      setRequests(data);
-      return data;
-    },
-  });
+  const { isError, isLoading } = useRequests();
 
   if (isLoading) return;
   if (isError) return;

@@ -11,19 +11,19 @@ import {
 } from "@/components/ui/sidebar";
 import { ModeToggle } from "./mode-toggle";
 import { Separator } from "./ui/separator";
-import { useProfileStore } from "@/stores/use-profile-store";
 import NavChats from "./nav-chats";
-import { useConversationsStore } from "@/stores/use-conversation-store";
+import { useConversations } from "@/hooks/use-conversations";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { profile } = useProfileStore();
-  const conversations = useConversationsStore((state) => state.conversations);
+  const { currentUser } = useCurrentUser();
+  const { conversations } = useConversations();
 
   const data = {
     user: {
-      name: profile.displayName,
-      email: profile.email,
-      avatar: profile.avatarUrl,
+      name: currentUser.fullname,
+      email: currentUser.email,
+      avatar: currentUser.avatarUrl,
     },
     navs: [
       {

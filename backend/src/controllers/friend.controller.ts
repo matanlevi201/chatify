@@ -1,46 +1,27 @@
 import type { Request, Response } from "express";
-import { FriendRequest } from "../models/friend-request";
-import { NotFoundError } from "../errors";
-import { User } from "../models/user";
+import {
+  findByClerkId,
+  findById,
+  findByIdWithFriends,
+} from "../services/user.service";
+import { handleFriendRemovel } from "../services/friend.service";
+import { publishFriendRemove } from "../events/publishers";
 
 export const removeFriend = async (req: Request, res: Response) => {
   const { id } = req.body;
-  const user = await User.findOne(
-    { clerkId: req.auth?.userId },
-    { _id: 1, friends: 1 }
-  );
-  const friend = await User.findOne(
-    { _id: id },
-    { _id: 1, friends: 1, clerkId: 1 }
-  );
-  if (!user || !friend) {
-    throw new NotFoundError();
-  }
-  await Promise.all([
-    User.updateOne({ _id: user._id }, { $pull: { friends: id } }),
-    User.updateOne({ _id: id }, { $pull: { friends: user.id.toString() } }),
+  const clerkId = req.auth?.userId!;
+  const [user, friend] = await Promise.all([
+    findByClerkId(clerkId),
+    findById(id),
   ]);
-  await FriendRequest.deleteOne({
-    $or: [
-      { sender: user.id, receiver: id },
-      { sender: id, receiver: user.id },
-    ],
-  });
-  const onlineUsers = req.app.onlineUsers;
-  const friendSocket = onlineUsers.get(friend.clerkId);
-  if (friendSocket) {
-    friendSocket.emit("friend:remove");
-  }
+  const { conversationId } = await handleFriendRemovel(user.id, friend.id);
+  publishFriendRemove(clerkId, friend.clerkId, conversationId);
   res.status(200).send();
 };
 
 export const getFriends = async (req: Request, res: Response) => {
-  const user = await User.findOne(
-    { clerkId: req.auth?.userId },
-    { friends: 1 }
-  ).populate("friends");
-  if (!user) {
-    throw new NotFoundError();
-  }
-  res.status(200).send(user?.friends);
+  const clerkId = req.auth?.userId!;
+  const user = await findByClerkId(clerkId);
+  const { friends } = await findByIdWithFriends(user.id);
+  res.status(200).send(friends);
 };

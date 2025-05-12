@@ -10,14 +10,13 @@ import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@/hooks/use-search";
 import { searchUsers } from "@/api";
 import { Badge } from "./ui/badge";
-import { getRequests, sendRequest } from "@/api/requests";
-import { useRequestStore } from "@/stores/use-requests-store";
-import { useShallow } from "zustand/shallow";
+import { sendRequest } from "@/api/requests";
 import { useModalStore } from "@/stores/use-modal-store";
+import { useRequests } from "@/hooks/use-requests";
 
 type Friend = {
   id: string;
@@ -28,6 +27,7 @@ type Friend = {
 };
 
 function SearchUsers() {
+  const queryClient = useQueryClient();
   const { setActiveModal } = useModalStore();
   const [result, setResult] = useState<Friend[]>([]);
   const { searchQuery, debouncedQuery, isSearching, setSearchQuery } =
@@ -37,9 +37,7 @@ function SearchUsers() {
         setResult(data);
       },
     });
-  const [setRequests, requests] = useRequestStore(
-    useShallow((state) => [state.setRequests, state.requests])
-  );
+  const { requests } = useRequests();
   const { mutateAsync: addFriend, isPending } = useMutation({
     mutationKey: ["add_friend"],
     mutationFn: async (data: {
@@ -52,8 +50,7 @@ function SearchUsers() {
       return request;
     },
     async onSuccess() {
-      const requests = await getRequests();
-      setRequests(requests);
+      await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
     },
   });
 

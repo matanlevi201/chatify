@@ -4,10 +4,10 @@ import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
 import Onboard from "@/pages/on-board";
 import AppLayout from "./pages/app-layout";
 import BlankPage from "./pages/blank-page";
-import Chat from "./pages/chat";
 import Friends from "./pages/friends";
 import MyProfile from "./pages/my-profile";
 import ProfileSetup from "./pages/profile-setup";
+import ChatWindow from "./pages/chat-window";
 
 const router = createBrowserRouter([
   {
@@ -29,7 +29,7 @@ const router = createBrowserRouter([
       },
       {
         path: "chat/:chatId",
-        element: <Chat />,
+        element: <ChatWindow />,
       },
       {
         path: "friends",

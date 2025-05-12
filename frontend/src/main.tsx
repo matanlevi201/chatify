@@ -15,10 +15,9 @@ if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key");
 }
 
-const queryClient = new QueryClient();
+export const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
-  // <StrictMode>
   <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -28,5 +27,4 @@ createRoot(document.getElementById("root")!).render(
       </ThemeProvider>
     </QueryClientProvider>
   </ClerkProvider>
-  // </StrictMode>
 );

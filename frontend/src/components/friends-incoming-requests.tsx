@@ -1,26 +1,40 @@
-import { useRequestStore } from "@/stores/use-requests-store";
 import { Avatar, AvatarImage } from "./ui/avatar";
 import { AvatarFallback } from "@radix-ui/react-avatar";
 import { Button } from "./ui/button";
 import { CheckIcon, Loader2Icon, XIcon } from "lucide-react";
 import { Badge } from "./ui/badge";
-import { acceptRequest, getRequests, rejectRequest } from "@/api/requests";
-import { useShallow } from "zustand/shallow";
-import { useMutation } from "@tanstack/react-query";
+import { acceptRequest, rejectRequest } from "@/api/requests";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRequests } from "@/hooks/use-requests";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { useActiveConversation } from "@/stores/use-active-conversation";
 
 function IncomingRequests() {
-  const [incoming, setRequests] = useRequestStore(
-    useShallow((state) => [state.incoming, state.setRequests])
-  );
-  const { mutateAsync: acceptFriend, isPending: acceptPending } = useMutation({
+  const { requests } = useRequests();
+  const queryClient = useQueryClient();
+  const { currentUser } = useCurrentUser();
+
+  const { mutateAsync: acceptFriend, isPending: acceptPending } = useMutation<
+    string,
+    Error,
+    { id: string; senderId: string }
+  >({
     mutationKey: ["accept_friend"],
-    mutationFn: async (id: string) => {
-      await acceptRequest({ id });
+    mutationFn: async ({ id, senderId }) => {
+      await acceptRequest({ id, senderId });
       return id;
     },
     async onSuccess() {
-      const requests = await getRequests();
-      setRequests(requests);
+      const { activeConversation, setActiveConversation } =
+        useActiveConversation.getState();
+      await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
+      await queryClient.invalidateQueries({ queryKey: ["get_conversations"] });
+      if (activeConversation) {
+        setActiveConversation({
+          ...activeConversation,
+          inActiveParticipants: [],
+        });
+      }
     },
   });
 
@@ -31,10 +45,13 @@ function IncomingRequests() {
       return id;
     },
     async onSuccess() {
-      const requests = await getRequests();
-      setRequests(requests);
+      await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
     },
   });
+
+  const incoming = requests.filter(
+    (req) => req.receiver.id === currentUser.id && req.status === "pending"
+  );
 
   return (
     <div className="w-full">
@@ -90,7 +107,12 @@ function IncomingRequests() {
               <Button
                 size="sm"
                 disabled={acceptPending}
-                onClick={async () => await acceptFriend(request.id)}
+                onClick={async () =>
+                  await acceptFriend({
+                    id: request.id,
+                    senderId: request.sender.id,
+                  })
+                }
               >
                 {acceptPending ? (
                   <Loader2Icon className="animate-spin" />

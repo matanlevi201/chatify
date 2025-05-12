@@ -1,15 +1,15 @@
 import { SendIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import { useSocketStore } from "@/stores/use-socket-store";
-import { useConversationsStore } from "@/stores/use-conversation-store";
 import { useChatTextBoxState } from "./chat-text-box-store";
+import { useActiveConversation } from "@/stores/use-active-conversation";
 
 function ActionSend() {
   const content = useChatTextBoxState((state) => state.content);
   const setContent = useChatTextBoxState((state) => state.setContent);
   const socket = useSocketStore((state) => state.socket);
   const isConnected = useSocketStore((state) => state.isConnected);
-  const activeConversation = useConversationsStore(
+  const activeConversation = useActiveConversation(
     (state) => state.activeConversation
   );
 

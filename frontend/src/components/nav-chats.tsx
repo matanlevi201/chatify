@@ -9,7 +9,7 @@ import { Button } from "./ui/button";
 import { PlusIcon } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import NavChatsItem from "./nav-chats-item";
-import { Conversation } from "@/stores/use-conversation-store";
+import { Conversation } from "@/hooks/use-conversations";
 
 interface NavChatsProps {
   conversations: Conversation[];

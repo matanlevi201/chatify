@@ -9,7 +9,7 @@ export interface ServerToClientEvents {
   }) => void;
   "request:cancel": () => void;
   "request:reject": () => void;
-  "request:accept": (data: { message: string }) => void;
+  "request:accept": (data: { message: string; conversationId: string }) => void;
   "friend:remove": () => void;
   "typing:start": (data: {
     conversationId: string;

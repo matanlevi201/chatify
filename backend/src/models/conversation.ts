@@ -7,6 +7,7 @@ interface ConversationAttrs {
   isGroup: boolean;
   avatarUrl?: string;
   participants: string[];
+  inActiveParticipants: string[];
   lastMessage?: string;
   seenBy?: { [key: string]: Date };
   unseenCounts?: Map<string, number>;
@@ -21,14 +22,19 @@ export interface ConversationDoc extends mongoose.Document {
   isGroup: boolean;
   avatarUrl: string;
   participants: string[];
+  inActiveParticipants: string[];
   lastMessage?: string;
   seenBy: { [key: string]: Date };
   unseenCounts: Map<string, number>;
 }
 
 export interface PopulatedConversationDoc
-  extends Omit<ConversationDoc, "participants" | "lastMessage"> {
+  extends Omit<
+    ConversationDoc,
+    "participants" | "inActiveParticipants" | "lastMessage"
+  > {
   participants: UserDoc[];
+  inActiveParticipants: UserDoc[];
   lastMessage: MessageDoc;
 }
 
@@ -38,6 +44,13 @@ const conversationSchema = new mongoose.Schema(
     isGroup: { type: Boolean, default: false, required: true },
     avatarUrl: { type: String, required: false },
     participants: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: [],
+      },
+    ],
+    inActiveParticipants: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",

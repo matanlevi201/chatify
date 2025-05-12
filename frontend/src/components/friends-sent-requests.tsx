@@ -1,17 +1,18 @@
-import { useRequestStore } from "@/stores/use-requests-store";
 import { Avatar, AvatarImage } from "./ui/avatar";
 import { AvatarFallback } from "@radix-ui/react-avatar";
 import { Button } from "./ui/button";
 import { ClockIcon, Loader2Icon } from "lucide-react";
 import { Badge } from "./ui/badge";
-import { useShallow } from "zustand/shallow";
-import { useMutation } from "@tanstack/react-query";
-import { cancelRequest, getRequests } from "@/api/requests";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { cancelRequest } from "@/api/requests";
+import { useRequests } from "@/hooks/use-requests";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 function SentRequests() {
-  const [sent, setRequests] = useRequestStore(
-    useShallow((state) => [state.sent, state.setRequests])
-  );
+  const { requests } = useRequests();
+  const queryClient = useQueryClient();
+  const { currentUser } = useCurrentUser();
+
   const { mutateAsync, isPending } = useMutation({
     mutationKey: ["cancel_request"],
     mutationFn: async (id: string) => {
@@ -19,10 +20,13 @@ function SentRequests() {
       return id;
     },
     async onSuccess() {
-      const requests = await getRequests();
-      setRequests(requests);
+      await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
     },
   });
+
+  const sent = requests.filter(
+    (req) => req.sender.id === currentUser.id && req.status === "pending"
+  );
 
   return (
     <div className="w-full">

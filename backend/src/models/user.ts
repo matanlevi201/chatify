@@ -8,9 +8,18 @@ export enum UserStatus {
 
 // An interface that describes the properties
 // that are requried to create a new User
-interface UserAttrs {
+export interface UserAttrs {
   email: string;
   clerkId: string;
+  avatarUrl: string;
+  fullname: string;
+  status: UserStatus;
+  bio?: string;
+  avatarKey?: string;
+  lastSeen?: mongoose.Schema.Types.Date;
+  friends?: mongoose.Schema.Types.ObjectId[];
+}
+export interface UserUpdateAttrs extends Omit<UserAttrs, "email" | "clerkId"> {
   avatarUrl: string;
   fullname: string;
   status: UserStatus;

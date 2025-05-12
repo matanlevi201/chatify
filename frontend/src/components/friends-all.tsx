@@ -11,16 +11,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getFriends, removeFriend } from "@/api/friends";
 import { useModalStore } from "@/stores/use-modal-store";
 import { useState } from "react";
-import { getRequests } from "@/api/requests";
-import { useRequestStore } from "@/stores/use-requests-store";
-import { useShallow } from "zustand/shallow";
+import { useActiveConversation } from "@/stores/use-active-conversation";
 
 function AllFriends() {
   const queryClient = useQueryClient();
   //  dropdownmenu overly conflicts with dialog overlay due to the async nature of dropdownmenu
-  const [setRequests] = useRequestStore(
-    useShallow((state) => [state.setRequests])
-  );
   const [callback, setCallback] = useState({ run: () => {} });
   const { setActiveModal } = useModalStore();
   const {
@@ -44,9 +39,17 @@ function AllFriends() {
       return await removeFriend({ id });
     },
     onSuccess: async () => {
+      const { activeConversation, setActiveConversation } =
+        useActiveConversation.getState();
       await queryClient.invalidateQueries({ queryKey: ["get_friends"] });
-      const requests = await getRequests();
-      setRequests(requests);
+      await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
+      await queryClient.invalidateQueries({ queryKey: ["get_conversations"] });
+      if (activeConversation) {
+        setActiveConversation({
+          ...activeConversation,
+          inActiveParticipants: [...activeConversation.participants],
+        });
+      }
     },
   });
 

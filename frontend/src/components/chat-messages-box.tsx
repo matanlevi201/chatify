@@ -1,15 +1,14 @@
-import { memo, useEffect, useRef } from "react";
-import { useMessagesStore } from "@/stores/use-messages-store";
+import { memo, Suspense, useEffect, useRef } from "react";
 import ChatMessage from "./chat-message";
-import { useConversationsStore } from "@/stores/use-conversation-store";
-import { Conversation } from "@/stores/use-conversation-store";
-import { Message } from "@/stores/use-messages-store";
 import { ScrollArea } from "./ui/scroll-area";
+import { useActiveConversation } from "@/stores/use-active-conversation";
+import useMessages, { Message } from "@/hooks/use-messages";
+import { useParams } from "react-router-dom";
+import { Conversation } from "@/hooks/use-conversations";
 
 function ChatMessagesBoxComponent({
   activeConversation,
   messages,
-  height,
 }: {
   activeConversation: Conversation;
   messages: Message[];
@@ -20,16 +19,11 @@ function ChatMessagesBoxComponent({
   useEffect(() => {
     if (!messages.length) return;
     messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-  }, [messages, height]);
+  }, [messages]);
 
   return (
-    <ScrollArea
-      className="container max-w-5xl"
-      style={{
-        maxHeight: `calc(100vh - ${height ? height + 80 : height}px)`,
-      }}
-    >
-      <div className="space-y-2.5 p-2.5 pb-0 [@media(max-width:500px)]:px-0">
+    <ScrollArea className="container max-w-5xl max-h-[calc(100vh-174px)]">
+      <div className="space-y-2.5 p-2.5 pb-0">
         {messages.map((msg) => (
           <ChatMessage
             key={msg.id}
@@ -47,12 +41,10 @@ const areEqual = (
   prevProps: {
     activeConversation: Conversation;
     messages: Message[];
-    height?: number;
   },
   nextProps: {
     activeConversation: Conversation;
     messages: Message[];
-    height?: number;
   }
 ) => {
   return (
@@ -60,27 +52,28 @@ const areEqual = (
     prevProps.messages.length === nextProps.messages.length &&
     prevProps.messages.every(
       (msg, i) => msg.readBy.length === nextProps.messages[i].readBy.length
-    ) &&
-    prevProps.height === nextProps.height
+    )
   );
 };
 
 const ChatMessagesBox = memo(ChatMessagesBoxComponent, areEqual);
 
-function ChatMessagesBoxContainer({ height }: { height?: number }) {
-  const activeConversation = useConversationsStore(
+function ChatMessagesBoxContainer() {
+  const { chatId } = useParams();
+  const activeConversation = useActiveConversation(
     (state) => state.activeConversation
   );
-  const messages = useMessagesStore((state) => state.messages);
+  const { messages } = useMessages(chatId ?? "");
 
   if (!activeConversation) return null;
 
   return (
-    <ChatMessagesBox
-      activeConversation={activeConversation}
-      messages={messages}
-      height={height}
-    />
+    <Suspense fallback={<div>Loading messages...</div>}>
+      <ChatMessagesBox
+        activeConversation={activeConversation}
+        messages={messages}
+      />
+    </Suspense>
   );
 }
 

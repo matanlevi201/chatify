@@ -12,8 +12,14 @@ export const sendRequest = async ({ receiver }: { receiver: string }) => {
   return response.data;
 };
 
-export const acceptRequest = async ({ id }: { id: string }) => {
-  const response = await api.put(`${BASE_URL}`, { id });
+export const acceptRequest = async ({
+  id,
+  senderId,
+}: {
+  id: string;
+  senderId: string;
+}) => {
+  const response = await api.put(`${BASE_URL}`, { id, senderId });
   return response.data;
 };
 

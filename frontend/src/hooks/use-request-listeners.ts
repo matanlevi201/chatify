@@ -1,4 +1,6 @@
 import { notification } from "@/lib/notification";
+import { getCurrentConversations } from "@/lib/query-conversation-utils";
+import { useActiveConversation } from "@/stores/use-active-conversation";
 import { useSocketStore } from "@/stores/use-socket-store";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -32,9 +34,19 @@ export function useRequestListeners() {
     });
 
     socket.on("request:accept", async (data) => {
+      const { activeConversation, setActiveConversation } =
+        useActiveConversation.getState();
       await queryClient.invalidateQueries({ queryKey: ["get_friends"] });
       await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
       await queryClient.invalidateQueries({ queryKey: ["get_conversations"] });
+      socket.emit("conversation:join", { id: data.conversationId });
+      const conversations = getCurrentConversations(queryClient);
+      if (activeConversation) {
+        const conversation = conversations.find(
+          (convo) => convo.id === activeConversation.id
+        );
+        if (conversation) setActiveConversation(conversation);
+      }
       notification({
         name: "generic",
         props: {

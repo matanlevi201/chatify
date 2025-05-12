@@ -1,10 +1,10 @@
 import { CheckCheckIcon } from "lucide-react";
 import AvatarWithStatus from "./avatar-with-status";
 import { format } from "date-fns";
-import { useCurrentUserStore } from "@/stores/use-current-user";
-import { Message } from "@/stores/use-messages-store";
-import { Conversation } from "@/stores/use-conversation-store";
 import { memo } from "react";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { Message } from "@/hooks/use-messages";
+import { Conversation } from "@/hooks/use-conversations";
 
 function ChatMessageComponent({
   message,
@@ -14,7 +14,7 @@ function ChatMessageComponent({
   conversation: Conversation;
 }) {
   const { sender, createdAt, content, readBy } = message;
-  const currentUser = useCurrentUserStore((state) => state.currentUser);
+  const { currentUser } = useCurrentUser();
 
   const formatted = format(createdAt, "h:mm a").toLowerCase();
   const showMessageStatus = sender.id === currentUser.id;

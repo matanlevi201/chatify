@@ -29,7 +29,7 @@ export type FormButton = {
 };
 
 const setProfileSchema = z.object({
-  displayName: z.string().min(3, "Name must be minimum 3 chars"),
+  fullname: z.string().min(3, "Name must be minimum 3 chars"),
   email: z.string().email().optional(),
   bio: z.string().optional(),
   avatar: z
@@ -70,7 +70,7 @@ function FormUpdateProfile({
   const form = useForm<SetProfileSchema>({
     resolver: zodResolver(setProfileSchema),
     defaultValues: {
-      displayName: defaultValues?.displayName ?? "",
+      fullname: defaultValues?.fullname ?? "",
       email: defaultValues?.email ?? undefined,
       bio: defaultValues?.bio ?? "",
     },

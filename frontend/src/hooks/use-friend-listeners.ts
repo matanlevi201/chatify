@@ -1,4 +1,5 @@
-import { useConversationsStore } from "@/stores/use-conversation-store";
+import { setParticipantStatus } from "@/lib/query-conversation-utils";
+import { useActiveConversation } from "@/stores/use-active-conversation";
 import {
   ServerToClientEvents,
   useSocketStore,
@@ -15,23 +16,62 @@ export function useFriendListeners() {
     if (!socket || !isConnected) return;
 
     const friendRemove: ServerToClientEvents["friend:remove"] = async () => {
+      const { activeConversation, setActiveConversation } =
+        useActiveConversation.getState();
       await queryClient.invalidateQueries({ queryKey: ["get_friends"] });
       await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
+      await queryClient.invalidateQueries({ queryKey: ["get_conversations"] });
+      if (activeConversation) {
+        setActiveConversation({
+          ...activeConversation,
+          inActiveParticipants: [...activeConversation.participants],
+        });
+      }
     };
 
     const friendOnline: ServerToClientEvents["friend:online"] = (data) => {
-      const { setParticipantStatus } = useConversationsStore.getState();
-      setParticipantStatus(data.friendId, "online");
+      const { setActiveConversation, activeConversation } =
+        useActiveConversation.getState();
+      if (activeConversation) {
+        setActiveConversation({
+          ...activeConversation,
+          participants: activeConversation.participants.map((par) => {
+            if (par.id !== data.friendId) return par;
+            return { ...par, status: "online" };
+          }),
+        });
+      }
+      setParticipantStatus(queryClient, data.friendId, "online");
     };
 
     const friendOffline: ServerToClientEvents["friend:offline"] = (data) => {
-      const { setParticipantStatus } = useConversationsStore.getState();
-      setParticipantStatus(data.friendId, "offline");
+      const { setActiveConversation, activeConversation } =
+        useActiveConversation.getState();
+      if (activeConversation) {
+        setActiveConversation({
+          ...activeConversation,
+          participants: activeConversation.participants.map((par) => {
+            if (par.id !== data.friendId) return par;
+            return { ...par, status: "offline" };
+          }),
+        });
+      }
+      setParticipantStatus(queryClient, data.friendId, "offline");
     };
 
     const friendAway: ServerToClientEvents["friend:away"] = (data) => {
-      const { setParticipantStatus } = useConversationsStore.getState();
-      setParticipantStatus(data.friendId, "away");
+      const { setActiveConversation, activeConversation } =
+        useActiveConversation.getState();
+      if (activeConversation) {
+        setActiveConversation({
+          ...activeConversation,
+          participants: activeConversation.participants.map((par) => {
+            if (par.id !== data.friendId) return par;
+            return { ...par, status: "away" };
+          }),
+        });
+      }
+      setParticipantStatus(queryClient, data.friendId, "away");
     };
 
     socket.on("friend:remove", friendRemove);
