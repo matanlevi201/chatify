@@ -52,7 +52,7 @@ export const handleTypingStart = async (
   try {
     if (activeRooms.get(conversationId)) {
       const user = await findByClerkId(clerkId);
-      await guardIsActiveParticipant(conversationId, user.id);
+      // await guardIsActiveParticipant(conversationId, user.id);
       socket.broadcast.to(conversationId).emit("typing:start", {
         conversationId,
         userId: user.id,
@@ -73,7 +73,7 @@ export const handleTypingEnd = async (
   try {
     if (activeRooms.get(conversationId)) {
       const user = await findByClerkId(clerkId);
-      await guardIsActiveParticipant(conversationId, user.id);
+      // await guardIsActiveParticipant(conversationId, user.id);
       socket.broadcast
         .to(conversationId)
         .emit("typing:end", { conversationId });
@@ -96,7 +96,7 @@ export const handleMessageSend = async (
   try {
     if (activeRooms.get(conversationId)) {
       const user = await findByClerkId(clerkId);
-      await guardIsActiveParticipant(conversationId, user.id);
+      // await guardIsActiveParticipant(conversationId, user.id);
       const conversation = await findConversationById(conversationId);
       const { message, unseenCounts } = await handleMessageCreation(
         content,
@@ -123,7 +123,7 @@ export const handleMessageSeen = async (
   try {
     if (activeRooms.get(conversationId)) {
       const user = await findByClerkId(clerkId);
-      await guardIsActiveParticipant(conversationId, user.id);
+      // await guardIsActiveParticipant(conversationId, user.id);
       const conversation = await findConversationById(conversationId);
       const { modifiedMessagesCount } = await markMessagesAsSeen(
         conversation,

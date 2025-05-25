@@ -15,7 +15,6 @@ import {
   handleTypingEnd,
   handleTypingStart,
 } from "@/events/listeners";
-
 export interface ServerToClientEvents {
   "request:send": (data: {
     fromUser: string;
@@ -74,6 +73,7 @@ export interface ClientToServerEvents {
   "friend:online": (data: undefined) => void;
   "friend:offline": (data: undefined) => void;
   "friend:away": (data: undefined) => void;
+  "conversations:auto:join": (data: undefined) => void;
 }
 
 type SocketStore = {

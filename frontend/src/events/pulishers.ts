@@ -44,3 +44,8 @@ export const publishFriendOffline = () => {
   const socket = useSocket.getState().getSocket();
   socket.emit("friend:offline", undefined);
 };
+
+export const publishConversationsAutoJoin = () => {
+  const socket = useSocket.getState().getSocket();
+  socket.emit("conversations:auto:join", undefined);
+};

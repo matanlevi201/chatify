@@ -46,6 +46,7 @@ export interface ClientToServerEvents {
   "friend:online": (data: undefined) => void;
   "friend:offline": (data: undefined) => void;
   "friend:away": (data: undefined) => void;
+  "conversations:auto:join": (data: undefined) => void;
 }
 declare global {
   namespace Express {

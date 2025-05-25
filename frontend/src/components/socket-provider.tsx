@@ -1,3 +1,4 @@
+import { publishConversationsAutoJoin } from "@/events/pulishers";
 import { useSocket } from "@/stores/use-socket";
 import { useAuth } from "@clerk/clerk-react";
 import { useQuery } from "@tanstack/react-query";
@@ -17,6 +18,7 @@ export function SocketProvider({ children }: Props) {
       const token = await getToken();
       if (token) {
         await initSocket(token);
+        publishConversationsAutoJoin();
       }
       return { isSocketConnected: true };
     },

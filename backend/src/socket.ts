@@ -54,8 +54,10 @@ export default function initSocket(server: http.Server) {
     "connection",
     async (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
       const userId = socket.user.sub;
-      console.log("user connected");
-      onlineUsers.set(userId, socket);
+      if (!onlineUsers.get(userId)) {
+        console.log("user connected");
+        onlineUsers.set(userId, socket);
+      }
 
       socket.on("conversation:join", (data) =>
         handleConversationJoin(socket, { ...data, clerkId: userId })
@@ -84,10 +86,13 @@ export default function initSocket(server: http.Server) {
       socket.on("friend:away", () =>
         handleFriendAway(socket, { clerkId: userId })
       );
-      await handleFriendOnline(socket, { clerkId: userId });
-      await handleConversationsAutoJoin(socket, { clerkId: userId });
+      socket.on("conversations:auto:join", () =>
+        handleConversationsAutoJoin(socket, { clerkId: userId })
+      );
+
       socket.on("disconnect", async () => {
         console.log("user disconnect");
+        handleConversationsAutoLeave(socket, { clerkId: userId });
         socket.off("conversation:join", handleConversationJoin);
         socket.off("conversation:leave", handleConversationLeave);
         socket.off("typing:start", handleTypingStart);
@@ -97,7 +102,7 @@ export default function initSocket(server: http.Server) {
         socket.off("friend:online", handleFriendOnline);
         socket.off("friend:offline", handleFriendOffline);
         socket.off("friend:away", handleFriendAway);
-        await handleConversationsAutoLeave(socket, { clerkId: userId });
+        socket.off("conversations:auto:join", handleConversationsAutoJoin);
         onlineUsers.delete(userId);
       });
     }
