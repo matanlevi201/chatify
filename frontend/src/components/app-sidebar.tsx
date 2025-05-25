@@ -14,12 +14,18 @@ import { Separator } from "./ui/separator";
 import NavChats from "./nav-chats";
 import useUserActivity from "@/hooks/use-user-activity";
 import { useCurrentUserQuery } from "@/hooks/use-current-user-query";
+import { useRequestsQuery } from "@/hooks/use-requests-query";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   useUserActivity();
   const currentUserQuery = useCurrentUserQuery();
+  const requestsQuery = useRequestsQuery();
 
   if (!currentUserQuery.data) return;
+  const incoming = requestsQuery.data?.filter(
+    (req) =>
+      req.receiver.id === currentUserQuery.data?.id && req.status === "pending"
+  );
 
   const data = {
     user: {
@@ -32,6 +38,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         name: "Friends",
         url: "/friends",
         icon: UsersIcon,
+        updates: incoming?.length,
       },
       {
         name: "My Profile",
