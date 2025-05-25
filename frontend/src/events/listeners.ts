@@ -101,7 +101,7 @@ export const friendRemove: ServerToClientEvents["friend:remove"] = async () => {
     useActiveConversation.getState();
   await queryClient.refetchQueries({ queryKey: ["get_friends"] });
   await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
-  await queryClient.invalidateQueries({ queryKey: ["get_conversations"] });
+  await queryClient.invalidateQueries({ queryKey: ["get_conversations"], refetchType: "all"});
   if (activeConversation) {
     setActiveConversation({
       ...activeConversation,
@@ -186,7 +186,10 @@ export const handleRequstsAccept: ServerToClientEvents["request:accept"] =
     await Promise.all([
       queryClient.refetchQueries({ queryKey: ["get_friends"] }),
       queryClient.invalidateQueries({ queryKey: ["get_requests"] }),
-      queryClient.invalidateQueries({ queryKey: ["get_conversations"] }),
+      queryClient.invalidateQueries({
+        queryKey: ["get_conversations"],
+        refetchType: "all",
+      }),
     ]);
     const socket = useSocket.getState().getSocket();
     socket.emit("conversation:join", { id: data.conversationId });

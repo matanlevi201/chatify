@@ -22,7 +22,10 @@ function useFriendsMutation() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["get_friends"] }),
         queryClient.invalidateQueries({ queryKey: ["get_requests"] }),
-        queryClient.invalidateQueries({ queryKey: ["get_conversations"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["get_conversations"],
+          refetchType: "all",
+        }),
       ]);
 
       if (activeConversation) {
