@@ -22,7 +22,8 @@ export const handleConversationJoin = async (
     await guardIsActiveParticipant(id, user.id);
     console.log(`${user.fullname} join room ${id}`);
     socket.join(id);
-    activeRooms.set(id, id);
+    const currentRooms = activeRooms.get(clerkId) ?? [];
+    activeRooms.set(clerkId, [...currentRooms, id]);
   } catch (error) {
     console.error({ msg: "Failed to join conversation", error });
     socket.emit("error", { msg: "Failed to join conversation" });
@@ -50,7 +51,8 @@ export const handleTypingStart = async (
   { conversationId, clerkId }: { conversationId: string; clerkId: string }
 ) => {
   try {
-    if (activeRooms.get(conversationId)) {
+    const rooms = activeRooms.get(clerkId) ?? [];
+    if (rooms.find((roomId) => roomId === conversationId)) {
       const user = await findByClerkId(clerkId);
       // await guardIsActiveParticipant(conversationId, user.id);
       socket.broadcast.to(conversationId).emit("typing:start", {
@@ -71,7 +73,8 @@ export const handleTypingEnd = async (
   { conversationId, clerkId }: { conversationId: string; clerkId: string }
 ) => {
   try {
-    if (activeRooms.get(conversationId)) {
+    const rooms = activeRooms.get(clerkId) ?? [];
+    if (rooms.find((roomId) => roomId === conversationId)) {
       const user = await findByClerkId(clerkId);
       // await guardIsActiveParticipant(conversationId, user.id);
       socket.broadcast
@@ -94,7 +97,8 @@ export const handleMessageSend = async (
   }: { content: string; conversationId: string; clerkId: string }
 ) => {
   try {
-    if (activeRooms.get(conversationId)) {
+    const rooms = activeRooms.get(clerkId) ?? [];
+    if (rooms.find((roomId) => roomId === conversationId)) {
       const user = await findByClerkId(clerkId);
       // await guardIsActiveParticipant(conversationId, user.id);
       const conversation = await findConversationById(conversationId);
@@ -121,7 +125,8 @@ export const handleMessageSeen = async (
   { conversationId, clerkId }: { conversationId: string; clerkId: string }
 ) => {
   try {
-    if (activeRooms.get(conversationId)) {
+    const rooms = activeRooms.get(clerkId) ?? [];
+    if (rooms.find((roomId) => roomId === conversationId)) {
       const user = await findByClerkId(clerkId);
       // await guardIsActiveParticipant(conversationId, user.id);
       const conversation = await findConversationById(conversationId);
@@ -221,7 +226,8 @@ export const handleConversationsAutoJoin = async (
     const userConversations = await findActiveConversationsIds(user.id);
     userConversations.forEach((convoId) => {
       socket.join(convoId);
-      activeRooms.set(convoId, convoId);
+      const currentRooms = activeRooms.get(clerkId) ?? [];
+      activeRooms.set(clerkId, [...currentRooms, convoId]);
       console.log(`${user.fullname} AUTO join room ${convoId}`);
     });
   } catch (error) {
@@ -239,9 +245,9 @@ export const handleConversationsAutoLeave = async (
     const userConversations = await findActiveConversationsIds(user.id);
     userConversations.forEach((convoId) => {
       socket.leave(convoId);
-      activeRooms.delete(convoId);
       console.log(`${user.fullname} AUTO leave room ${convoId}`);
     });
+    activeRooms.delete(clerkId);
   } catch (error) {
     console.error({ msg: "Failed to AUTO leave conversation", error });
     socket.emit("error", { msg: "Failed to AUTO leave conversation" });

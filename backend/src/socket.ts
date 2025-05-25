@@ -19,7 +19,7 @@ import {
 } from "./events/listeners";
 
 export const onlineUsers = new Map<string, Socket<ServerToClientEvents>>();
-export const activeRooms = new Map<string, string>();
+export const activeRooms = new Map<string, string[]>();
 
 export default function initSocket(server: http.Server) {
   const io = new Server(server, {
