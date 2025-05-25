@@ -7,18 +7,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ModeToggle } from "@/components/mode-toggle";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import FormUpdateProfile, {
   Field,
   FormButton,
   SetProfileSchema,
 } from "@/components/form-update-profile";
-import { setProfile } from "@/api";
 import { Button } from "@/components/ui/button";
-import ToggleWrapper from "@/components/toggle-wrapper";
-import { useCurrentUser } from "@/hooks/use-current-user";
-import { setUserProfile } from "@/lib/query-current-user-utils";
+import TooltipWrapper from "@/components/tooltip-wrapper";
+import { useCurrentUserQuery } from "@/hooks/use-current-user-query";
+import useCurrentUserMutation from "@/hooks/use-current-user-mutation";
 
 const inputs: Field<SetProfileSchema>[] = [
   {
@@ -35,34 +33,28 @@ const inputs: Field<SetProfileSchema>[] = [
 ];
 
 function ProfileSetup() {
-  const queryClient = useQueryClient();
-  const { currentUser } = useCurrentUser();
   const navigate = useNavigate();
-  const { mutateAsync, isPending } = useMutation({
-    mutationKey: ["set_profile"],
-    mutationFn: async (values: SetProfileSchema) => {
-      return await setProfile({ ...values, fullname: values.fullname });
-    },
-    onSuccess(newData: SetProfileSchema) {
-      setUserProfile(queryClient, newData);
-      navigate("/");
-    },
-  });
+  const currentUserQuery = useCurrentUserQuery();
+  const { updateProfileMutation } = useCurrentUserMutation();
 
   const saveAndContinue = async (formValues: SetProfileSchema) => {
-    await mutateAsync(formValues);
+    await updateProfileMutation.mutateAsync(formValues);
+    navigate("/");
   };
 
   const buttons: FormButton[] = [
     {
       name: "Continue to Chat",
       type: "submit",
-      isLoading: isPending,
+      isLoading: updateProfileMutation.isPending,
       loadingIcon: <Loader2Icon className="animate-spin" />,
       notLoadingIcon: <CheckIcon />,
       className: "w-full",
     },
   ];
+
+  if (currentUserQuery.isPending) return <div>Loading...</div>;
+  if (!currentUserQuery.data) return;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -72,7 +64,7 @@ function ProfileSetup() {
             <CardTitle className="text-2xl">Set up your profile</CardTitle>
             <div>
               <ModeToggle />
-              <ToggleWrapper msg="Skip for now">
+              <TooltipWrapper msg="Skip for now">
                 <Button
                   size="icon"
                   variant="ghost"
@@ -80,7 +72,7 @@ function ProfileSetup() {
                 >
                   <ChevronLast />
                 </Button>
-              </ToggleWrapper>
+              </TooltipWrapper>
             </div>
           </div>
           <CardDescription>
@@ -93,8 +85,8 @@ function ProfileSetup() {
             buttons={buttons}
             onSubmit={saveAndContinue}
             defaultValues={{
-              fullname: currentUser.fullname,
-              bio: currentUser.bio,
+              fullname: currentUserQuery.data.fullname,
+              bio: currentUserQuery.data.bio,
             }}
           />
         </CardContent>

@@ -3,29 +3,19 @@ import { AvatarFallback } from "@radix-ui/react-avatar";
 import { Button } from "./ui/button";
 import { ClockIcon, Loader2Icon } from "lucide-react";
 import { Badge } from "./ui/badge";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { cancelRequest } from "@/api/requests";
-import { useRequests } from "@/hooks/use-requests";
-import { useCurrentUser } from "@/hooks/use-current-user";
+import { useRequestsQuery } from "@/hooks/use-requests-query";
+import useFriendsMutation from "@/hooks/use-friends-mutation";
+import { useCurrentUserQuery } from "@/hooks/use-current-user-query";
 
 function SentRequests() {
-  const { requests } = useRequests();
-  const queryClient = useQueryClient();
-  const { currentUser } = useCurrentUser();
+  const { cancelFriendMutation } = useFriendsMutation();
+  const requestsQuery = useRequestsQuery();
+  const currentUserQuery = useCurrentUserQuery();
 
-  const { mutateAsync, isPending } = useMutation({
-    mutationKey: ["cancel_request"],
-    mutationFn: async (id: string) => {
-      await cancelRequest({ id });
-      return id;
-    },
-    async onSuccess() {
-      await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
-    },
-  });
-
+  const requests = requestsQuery.data ?? [];
   const sent = requests.filter(
-    (req) => req.sender.id === currentUser.id && req.status === "pending"
+    (req) =>
+      req.sender.id === currentUserQuery.data?.id && req.status === "pending"
   );
 
   return (
@@ -73,10 +63,12 @@ function SentRequests() {
               <Button
                 size="sm"
                 variant="ghost"
-                disabled={isPending}
-                onClick={async () => await mutateAsync(request.id)}
+                disabled={cancelFriendMutation.isPending}
+                onClick={async () =>
+                  await cancelFriendMutation.mutateAsync(request.id)
+                }
               >
-                {isPending ? (
+                {cancelFriendMutation.isPending ? (
                   <Loader2Icon className="animate-spin" />
                 ) : (
                   "Cancel"

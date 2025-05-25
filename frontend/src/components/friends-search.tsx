@@ -10,13 +10,12 @@ import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@/hooks/use-search";
 import { searchUsers } from "@/api";
 import { Badge } from "./ui/badge";
-import { sendRequest } from "@/api/requests";
 import { useModalStore } from "@/stores/use-modal-store";
-import { useRequests } from "@/hooks/use-requests";
+import { useRequestsQuery } from "@/hooks/use-requests-query";
+import useFriendsMutation from "@/hooks/use-friends-mutation";
 
 type Friend = {
   id: string;
@@ -27,8 +26,9 @@ type Friend = {
 };
 
 function SearchUsers() {
-  const queryClient = useQueryClient();
+  const requestsQuery = useRequestsQuery();
   const { setActiveModal } = useModalStore();
+  const { addFriendMutation } = useFriendsMutation();
   const [result, setResult] = useState<Friend[]>([]);
   const { searchQuery, debouncedQuery, isSearching, setSearchQuery } =
     useSearch({
@@ -37,24 +37,9 @@ function SearchUsers() {
         setResult(data);
       },
     });
-  const { requests } = useRequests();
-  const { mutateAsync: addFriend, isPending } = useMutation({
-    mutationKey: ["add_friend"],
-    mutationFn: async (data: {
-      id: string;
-      fullname: string;
-      email: string;
-      avatarUrl: string;
-    }) => {
-      const request = await sendRequest({ receiver: data.id });
-      return request;
-    },
-    async onSuccess() {
-      await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
-    },
-  });
 
   useEffect(() => {
+    const requests = requestsQuery.data ?? [];
     const updatedResults = result.map((u) => {
       const req = requests.find(
         (req) => req.sender.id === u.id || req.receiver.id === u.id
@@ -63,7 +48,7 @@ function SearchUsers() {
       return u;
     });
     setResult(updatedResults);
-  }, [requests]);
+  }, [requestsQuery.data]);
 
   const RenderSwitch = ({ friend }: { friend: Friend }) => {
     switch (true) {
@@ -71,10 +56,10 @@ function SearchUsers() {
         return (
           <Button
             size="sm"
-            disabled={isPending}
-            onClick={async () => await addFriend(friend)}
+            disabled={addFriendMutation.isPending}
+            onClick={async () => await addFriendMutation.mutateAsync(friend)}
           >
-            {isPending ? (
+            {addFriendMutation.isPending ? (
               <Loader2Icon className="animate-spin" />
             ) : (
               <UserPlusIcon className="h-4 w-4" />

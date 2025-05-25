@@ -1,5 +1,5 @@
 import { getRequests } from "@/api/requests";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 export type Request = {
   id: string;
@@ -8,15 +8,11 @@ export type Request = {
   status: "pending" | "rejected" | "accepted";
 };
 
-export function useRequests() {
-  const { data, isLoading, isError } = useSuspenseQuery<Request[]>({
+export function useRequestsQuery() {
+  const useRequestsQuery = useQuery<Request[]>({
     queryKey: ["get_requests"],
     queryFn: getRequests,
   });
 
-  return {
-    requests: data,
-    isLoading,
-    isError,
-  };
+  return useRequestsQuery;
 }

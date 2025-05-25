@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { useFormContext, Controller } from "react-hook-form";
 import { Separator } from "./ui/separator";
 import { FormMessage } from "./ui/form";
-import { useCurrentUser } from "@/hooks/use-current-user";
+import { useCurrentUserQuery } from "@/hooks/use-current-user-query";
 
 const DEFAULT_AVATARS = [
   "avatar-1.png",
@@ -30,7 +30,7 @@ type Props = {
 };
 
 function AvatarSelection({ name, disabled }: Props) {
-  const { currentUser } = useCurrentUser();
+  const currentUserQuery = useCurrentUserQuery();
   const { control, setValue } = useFormContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -68,18 +68,20 @@ function AvatarSelection({ name, disabled }: Props) {
               <div>
                 <Avatar className="h-32 w-32 border-4 border-background shadow-md">
                   <AvatarImage
-                    src={currentUser.avatarUrl || "/placeholder.svg"}
+                    src={currentUserQuery.data?.avatarUrl || "/placeholder.svg"}
                     alt="Profile"
                   />
                   <AvatarFallback className="text-4xl">
-                    {currentUser.fullname.charAt(0)}
+                    {currentUserQuery.data?.fullname.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
               </div>
               <div className="text-center">
-                <h2 className="text-xl font-bold">{currentUser.fullname}</h2>
+                <h2 className="text-xl font-bold">
+                  {currentUserQuery.data?.fullname}
+                </h2>
                 <p className="text-sm text-muted-foreground">
-                  {currentUser.email}
+                  {currentUserQuery.data?.email}
                 </p>
               </div>
             </>
@@ -89,7 +91,9 @@ function AvatarSelection({ name, disabled }: Props) {
                 <Avatar className="h-24 w-24 border-4 border-background shadow-md">
                   <AvatarImage
                     src={
-                      avatarUrl || currentUser.avatarUrl || "/placeholder.svg"
+                      avatarUrl ||
+                      currentUserQuery.data?.avatarUrl ||
+                      "/placeholder.svg"
                     }
                     alt="Profile"
                   />

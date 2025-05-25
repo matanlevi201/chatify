@@ -7,7 +7,7 @@ import BlankPage from "./pages/blank-page";
 import Friends from "./pages/friends";
 import MyProfile from "./pages/my-profile";
 import ProfileSetup from "./pages/profile-setup";
-import ChatWindow from "./pages/chat-window";
+import ConversationWindow from "./pages/conversation";
 
 const router = createBrowserRouter([
   {
@@ -29,7 +29,7 @@ const router = createBrowserRouter([
       },
       {
         path: "chat/:chatId",
-        element: <ChatWindow />,
+        element: <ConversationWindow />,
       },
       {
         path: "friends",

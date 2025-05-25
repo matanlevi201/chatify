@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Textarea } from "../ui/textarea";
 import { useChatTextBoxState } from "./chat-text-box-store";
-import { useSocketStore } from "@/stores/use-socket-store";
 import { useDebounce } from "use-debounce";
 import { useActiveConversation } from "@/stores/use-active-conversation";
+import { publishTypingEnd, publishTypingStart } from "@/events/pulishers";
 
 function ChatTextarea() {
   const content = useChatTextBoxState((state) => state.content);
@@ -15,17 +15,15 @@ function ChatTextarea() {
   const [debouncedContent] = useDebounce(content, 600);
   const [isTyping, setIsTyping] = useState(false);
 
-  const socket = useSocketStore((state) => state.socket);
-  const isConnected = useSocketStore((state) => state.isConnected);
   const activeConversation = useActiveConversation(
     (state) => state.activeConversation
   );
 
   const handleOnChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent({ text: e.target.value });
-    if (!socket || !isConnected || !activeConversation) return;
+    if (!activeConversation) return;
     if (!isTyping) {
-      socket.emit("typing:start", { conversationId: activeConversation.id });
+      publishTypingStart(activeConversation?.id);
       setIsTyping(true);
     }
   };
@@ -37,10 +35,10 @@ function ChatTextarea() {
   }, [setTextareaRef]);
 
   useEffect(() => {
-    if (!socket || !isConnected || !activeConversation) return;
+    if (!activeConversation) return;
 
     if (isTyping) {
-      socket.emit("typing:end", { conversationId: activeConversation.id });
+      publishTypingEnd(activeConversation.id);
       setIsTyping(false);
     }
   }, [debouncedContent]);

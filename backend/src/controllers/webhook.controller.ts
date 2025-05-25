@@ -12,7 +12,7 @@ export const clerkWebhook = async (req: Request, res: Response) => {
       clerkId: id,
       avatarUrl: image_url,
       fullname: `${first_name} ${last_name}`,
-      status: UserStatus.CONNECTED,
+      status: UserStatus.ONLINE,
     });
     await newUser.save();
     res.status(201).send({ success: true });

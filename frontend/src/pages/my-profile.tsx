@@ -1,4 +1,3 @@
-import { setProfile } from "@/api";
 import AppHeader from "@/components/app-header";
 import FormUpdateProfile, {
   Field,
@@ -12,9 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useCurrentUser } from "@/hooks/use-current-user";
-import { setUserProfile } from "@/lib/query-current-user-utils";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import useCurrentUserMutation from "@/hooks/use-current-user-mutation";
+import { useCurrentUserQuery } from "@/hooks/use-current-user-query";
 import { CheckIcon, Loader2Icon } from "lucide-react";
 import { useState } from "react";
 
@@ -47,23 +45,13 @@ const inputs: Field<SetProfileSchema>[] = [
 ];
 
 function MyProfile() {
-  const queryClient = useQueryClient();
-  const { currentUser } = useCurrentUser();
+  const currentUserQuery = useCurrentUserQuery();
   const [isEditing, setIsEditing] = useState(false);
-
-  const { mutateAsync, isPending } = useMutation({
-    mutationKey: ["set_profile"],
-    mutationFn: async (data: SetProfileSchema) => {
-      return await setProfile({ ...data, fullname: data.fullname });
-    },
-    onSuccess(data: SetProfileSchema) {
-      setIsEditing(false);
-      setUserProfile(queryClient, data);
-    },
-  });
+  const { updateProfileMutation } = useCurrentUserMutation();
 
   const save = async (values: SetProfileSchema) => {
-    await mutateAsync(values);
+    await updateProfileMutation.mutateAsync(values);
+    setIsEditing(false);
   };
 
   const cancel = () => {
@@ -73,14 +61,14 @@ function MyProfile() {
   const onEditbuttons: FormButton[] = [
     {
       name: "Cancel",
-      isLoading: isPending,
+      isLoading: updateProfileMutation.isPending,
       action: cancel,
       variant: "outline",
       type: "reset",
     },
     {
       name: "Save",
-      isLoading: isPending,
+      isLoading: updateProfileMutation.isPending,
       loadingIcon: <Loader2Icon className="animate-spin" />,
       notLoadingIcon: <CheckIcon />,
       type: "submit",
@@ -89,6 +77,9 @@ function MyProfile() {
   const buttons: FormButton[] = [
     { name: "Edit Profile", action: () => setIsEditing(true) },
   ];
+
+  if (currentUserQuery.isPending) return <div>Loading...</div>;
+  if (!currentUserQuery.data) return;
 
   return (
     <div className="h-full flex flex-col">
@@ -109,9 +100,9 @@ function MyProfile() {
               buttons={isEditing ? onEditbuttons : buttons}
               disabled={!isEditing}
               defaultValues={{
-                email: currentUser.email,
-                fullname: currentUser.fullname,
-                bio: currentUser.bio,
+                email: currentUserQuery.data.email,
+                fullname: currentUserQuery.data.fullname,
+                bio: currentUserQuery.data.bio,
               }}
               onSubmit={save}
             />

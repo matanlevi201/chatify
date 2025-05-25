@@ -1,8 +1,8 @@
 import AvatarWithStatus from "./avatar-with-status";
 import { formatDistanceToNow } from "date-fns";
 import { useNowUpdate } from "@/hooks/use-now-update";
-import { Conversation } from "@/hooks/use-conversations";
 import useAvatarHeaderDetails from "@/hooks/use-avatar-header-details";
+import { Conversation } from "@/hooks/use-conversations-query";
 
 function NavChatsItem({ conversation }: { conversation: Conversation }) {
   useNowUpdate();

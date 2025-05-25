@@ -1,26 +1,25 @@
 import { Outlet } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import InitializeSocket from "@/components/initializers/initialize-socket";
-import InitializeListeners from "@/components/initializers/initialize-listeners";
-import { useConversations } from "@/hooks/use-conversations";
-import { useCurrentUser } from "@/hooks/use-current-user";
+import { SocketProvider } from "@/components/socket-provider";
+import { useCurrentUserQuery } from "@/hooks/use-current-user-query";
 
 function AppLayout() {
-  useConversations();
-  useCurrentUser();
+  const currentUserQuery = useCurrentUserQuery();
+
+  if (currentUserQuery.isPending) return <div>Loading current user...</div>;
+  if (currentUserQuery.isError)
+    return <div>{currentUserQuery.error.message}</div>;
 
   return (
-    <InitializeSocket>
-      <InitializeListeners>
-        <SidebarProvider>
-          <AppSidebar />
-          <SidebarInset>
-            <Outlet />
-          </SidebarInset>
-        </SidebarProvider>
-      </InitializeListeners>
-    </InitializeSocket>
+    <SidebarProvider>
+      <SocketProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <Outlet />
+        </SidebarInset>
+      </SocketProvider>
+    </SidebarProvider>
   );
 }
 

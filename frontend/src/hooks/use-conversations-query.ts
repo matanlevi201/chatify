@@ -1,5 +1,5 @@
+import { useQuery } from "@tanstack/react-query";
 import { getConversations } from "@/api/conversations";
-import { useSuspenseQuery } from "@tanstack/react-query";
 
 export type Conversation = {
   id: string;
@@ -29,16 +29,10 @@ export type Conversation = {
   };
 };
 
-export const useConversations = () => {
-  const { data, isLoading, isError } = useSuspenseQuery<Conversation[]>({
+export const useConversationsQuery = () => {
+  const conversationsQuery = useQuery<Conversation[]>({
     queryKey: ["get_conversations"],
     queryFn: getConversations,
-    staleTime: Infinity,
   });
-
-  return {
-    conversations: data,
-    isLoading,
-    isError,
-  };
+  return conversationsQuery;
 };

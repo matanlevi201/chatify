@@ -6,7 +6,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 
-function ToggleWrapper({
+function TooltipWrapper({
   children,
   msg,
 }: {
@@ -23,4 +23,4 @@ function ToggleWrapper({
   );
 }
 
-export default ToggleWrapper;
+export default TooltipWrapper;

@@ -7,68 +7,35 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getFriends, removeFriend } from "@/api/friends";
 import { useModalStore } from "@/stores/use-modal-store";
 import { useState } from "react";
-import { useActiveConversation } from "@/stores/use-active-conversation";
+import useFriendsQuery from "@/hooks/use-friends-query";
+import useFriendsMutation from "@/hooks/use-friends-mutation";
 
 function AllFriends() {
-  const queryClient = useQueryClient();
   //  dropdownmenu overly conflicts with dialog overlay due to the async nature of dropdownmenu
   const [callback, setCallback] = useState({ run: () => {} });
+  const { removeFriendMutation } = useFriendsMutation();
   const { setActiveModal } = useModalStore();
-  const {
-    data: friends,
-    isError,
-    isLoading,
-  } = useQuery<
-    { id: string; fullname: string; email: string; avatarUrl: string }[]
-  >({
-    queryKey: ["get_friends"],
-    queryFn: async () => {
-      const data = await getFriends();
-      return data;
-    },
-    initialData: [],
-  });
+  const friends = useFriendsQuery();
 
-  const { mutateAsync } = useMutation({
-    mutationKey: ["remove_friend"],
-    mutationFn: async (id: string) => {
-      return await removeFriend({ id });
-    },
-    onSuccess: async () => {
-      const { activeConversation, setActiveConversation } =
-        useActiveConversation.getState();
-      await queryClient.invalidateQueries({ queryKey: ["get_friends"] });
-      await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
-      await queryClient.invalidateQueries({ queryKey: ["get_conversations"] });
-      if (activeConversation) {
-        setActiveConversation({
-          ...activeConversation,
-          inActiveParticipants: [...activeConversation.participants],
-        });
-      }
-    },
-  });
-
-  if (isLoading) return;
-  if (isError) return;
+  if (friends.isLoading) return;
+  if (friends.isError) return;
+  const friendsList = friends.data ?? [];
 
   return (
     <div className="w-full">
       <h3 className="text-md font-medium mb-2 flex items-center">
         Your Friends
       </h3>
-      {!friends.length ? (
+      {!friendsList.length ? (
         <div className="mt-2 border rounded-md overflow-hidden">
           <div className="p-4 text-center text-muted-foreground">
             Add friends and start chatify !
           </div>
         </div>
       ) : (
-        friends.map((friend) => (
+        friendsList.map((friend) => (
           <div
             key={friend.id}
             className="flex items-center gap-2 justify-between p-3 rounded-lg border hover:bg-muted/50 flex-wrap"
@@ -117,7 +84,8 @@ function AllFriends() {
                           setActiveModal("confirm", {
                             description: `You will no longer be able to communicate, but you can always send
             another request later if needed.`,
-                            callback: async () => await mutateAsync(friend.id),
+                            callback: async () =>
+                              await removeFriendMutation.mutateAsync(friend.id),
                           }),
                       })
                     }

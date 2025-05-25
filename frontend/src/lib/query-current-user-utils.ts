@@ -1,4 +1,4 @@
-import { CurrentUser } from "@/hooks/use-current-user";
+import { CurrentUser } from "@/hooks/use-current-user-query";
 import { QueryClient } from "@tanstack/react-query";
 
 export const setUserProfile = (

@@ -12,18 +12,20 @@ import {
 import { ModeToggle } from "./mode-toggle";
 import { Separator } from "./ui/separator";
 import NavChats from "./nav-chats";
-import { useConversations } from "@/hooks/use-conversations";
-import { useCurrentUser } from "@/hooks/use-current-user";
+import useUserActivity from "@/hooks/use-user-activity";
+import { useCurrentUserQuery } from "@/hooks/use-current-user-query";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { currentUser } = useCurrentUser();
-  const { conversations } = useConversations();
+  useUserActivity();
+  const currentUserQuery = useCurrentUserQuery();
+
+  if (!currentUserQuery.data) return;
 
   const data = {
     user: {
-      name: currentUser.fullname,
-      email: currentUser.email,
-      avatar: currentUser.avatarUrl,
+      name: currentUserQuery.data.fullname,
+      email: currentUserQuery.data.email,
+      avatar: currentUserQuery.data.avatarUrl,
     },
     navs: [
       {
@@ -52,7 +54,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent className="bg-background gap-0">
         <NavMain navs={data.navs} />
-        <NavChats conversations={conversations} />
+        <NavChats />
       </SidebarContent>
       <Separator className="h-1" />
       <SidebarFooter className="bg-background">

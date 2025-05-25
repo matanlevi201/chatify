@@ -4,11 +4,11 @@ import { useChatTextBoxState } from "./chat-text-box-store";
 import ActionSend from "./action-send";
 import ChatTextarea from "./chat-textarea";
 import { useActiveConversation } from "@/stores/use-active-conversation";
-import { useCurrentUser } from "@/hooks/use-current-user";
 import { UserXIcon } from "lucide-react";
+import { useCurrentUserQuery } from "@/hooks/use-current-user-query";
 
 function ChatTextBox() {
-  const { currentUser } = useCurrentUser();
+  const currentUserQuery = useCurrentUserQuery();
   const activeConversation = useActiveConversation(
     (state) => state.activeConversation
   );
@@ -18,7 +18,7 @@ function ChatTextBox() {
 
   if (
     activeConversation.inActiveParticipants.find(
-      ({ id }) => id === currentUser.id
+      ({ id }) => id === currentUserQuery.data?.id
     )
   )
     return (

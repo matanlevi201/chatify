@@ -1,4 +1,4 @@
-import { Message } from "@/hooks/use-messages";
+import { Message } from "@/components/chat-message";
 import { QueryClient } from "@tanstack/react-query";
 
 export const addMessage = (

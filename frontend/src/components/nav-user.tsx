@@ -1,12 +1,10 @@
-"use client";
-
 import { LogOutIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useClerk } from "@clerk/clerk-react";
 import { Button } from "./ui/button";
-import { useSocketStore } from "@/stores/use-socket-store";
+import { publishFriendOffline } from "@/events/pulishers";
 
 export function NavUser({
   user,
@@ -17,8 +15,6 @@ export function NavUser({
     avatar: string;
   };
 }) {
-  const socket = useSocketStore((state) => state.socket);
-  const isConnected = useSocketStore((state) => state.isConnected);
   const { signOut } = useClerk();
 
   return (
@@ -37,9 +33,8 @@ export function NavUser({
           </div>
           <Button
             onClick={async () => {
-              if (!socket || !isConnected) return;
-              socket.emit("friend:offline", undefined);
               await signOut();
+              publishFriendOffline();
             }}
             variant="ghost"
             size="icon"

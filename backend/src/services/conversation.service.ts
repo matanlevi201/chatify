@@ -13,6 +13,17 @@ export const findConversations = async (userId: string) => {
   return conversations;
 };
 
+export const findActiveConversationsIds = async (userId: string) => {
+  const conversations = await Conversation.find({
+    participants: userId,
+    inActiveParticipants: { $ne: userId },
+  })
+    .select("_id")
+    .lean();
+
+  return conversations.map((conv) => conv._id.toString());
+};
+
 export const guardIsParticipant = async (id: string, userId: string) => {
   const conversation = await Conversation.findOne({
     _id: id,

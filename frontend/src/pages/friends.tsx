@@ -4,10 +4,10 @@ import IncomingRequests from "@/components/friends-incoming-requests";
 import SentRequests from "@/components/friends-sent-requests";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SearchUsers from "@/components/friends-search";
-import { useRequests } from "@/hooks/use-requests";
+import { useRequestsQuery } from "@/hooks/use-requests-query";
 
 function Friends() {
-  const { isError, isLoading } = useRequests();
+  const { isError, isLoading } = useRequestsQuery();
 
   if (isLoading) return;
   if (isError) return;

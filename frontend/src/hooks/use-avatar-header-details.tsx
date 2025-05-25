@@ -1,18 +1,18 @@
-import { useCurrentUser } from "./use-current-user";
 import { UsersIcon } from "lucide-react";
-import { Conversation } from "./use-conversations";
+import { useCurrentUserQuery } from "./use-current-user-query";
+import { Conversation } from "./use-conversations-query";
 
 function useAvatarHeaderDetails(conversation: Conversation | null) {
-  const { currentUser } = useCurrentUser();
+  const currentUserQuery = useCurrentUserQuery();
 
-  if (!conversation) return null;
+  if (!conversation || !currentUserQuery.data) return null;
 
   const resolveName = () => {
     if (conversation.isGroup) {
       return conversation.name ?? "";
     }
     const participant = conversation.participants.find(
-      ({ id }) => id !== currentUser.id
+      ({ id }) => id !== currentUserQuery.data.id
     );
     return participant?.fullname ?? "";
   };
@@ -22,7 +22,7 @@ function useAvatarHeaderDetails(conversation: Conversation | null) {
       return conversation.avatarUrl ?? "";
     }
     const participant = conversation.participants.find(
-      ({ id }) => id !== currentUser.id
+      ({ id }) => id !== currentUserQuery.data.id
     );
     return participant?.avatarUrl ?? "";
   };
@@ -35,19 +35,23 @@ function useAvatarHeaderDetails(conversation: Conversation | null) {
 
   const resolveStatus = () => {
     if (
-      conversation.inActiveParticipants.find(({ id }) => id === currentUser.id)
+      conversation.inActiveParticipants.find(
+        ({ id }) => id === currentUserQuery.data.id
+      )
     )
       return;
     if (!conversation.isGroup) {
       const participant = conversation.participants.find(
-        ({ id }) => id !== currentUser.id
+        ({ id }) => id !== currentUserQuery.data.id
       );
       return participant?.status;
     }
   };
   const resolveUserTyping = () => {
     if (
-      conversation.inActiveParticipants.find(({ id }) => id === currentUser.id)
+      conversation.inActiveParticipants.find(
+        ({ id }) => id === currentUserQuery.data.id
+      )
     )
       return;
     if (conversation.userTyping) {

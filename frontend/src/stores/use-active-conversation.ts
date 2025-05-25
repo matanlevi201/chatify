@@ -1,4 +1,4 @@
-import { Conversation } from "@/hooks/use-conversations";
+import { Conversation } from "@/hooks/use-conversations-query";
 import { create } from "zustand";
 
 interface ActiveConversationState {

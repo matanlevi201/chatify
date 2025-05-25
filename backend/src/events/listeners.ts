@@ -2,6 +2,7 @@ import type { Socket } from "socket.io";
 import type { ClientToServerEvents, ServerToClientEvents } from "../types";
 import { findByClerkId } from "../services/user.service";
 import {
+  findActiveConversationsIds,
   findConversationById,
   guardIsActiveParticipant,
 } from "../services/conversation.service";
@@ -208,5 +209,41 @@ export const handleFriendAway = async (
   } catch (error) {
     console.error({ msg: "Failed to notify friend away", error });
     socket.emit("error", { msg: "Failed to notify friend away" });
+  }
+};
+
+export const handleConversationsAutoJoin = async (
+  socket: Socket<ClientToServerEvents, ServerToClientEvents>,
+  { clerkId }: { clerkId: string }
+) => {
+  try {
+    const user = await findByClerkId(clerkId);
+    const userConversations = await findActiveConversationsIds(user.id);
+    userConversations.forEach((convoId) => {
+      socket.join(convoId);
+      activeRooms.set(convoId, convoId);
+      console.log(`${user.fullname} AUTO join room ${convoId}`);
+    });
+  } catch (error) {
+    console.error({ msg: "Failed to AUTO join conversation", error });
+    socket.emit("error", { msg: "Failed to AUTO join conversation" });
+  }
+};
+
+export const handleConversationsAutoLeave = async (
+  socket: Socket<ClientToServerEvents, ServerToClientEvents>,
+  { clerkId }: { clerkId: string }
+) => {
+  try {
+    const user = await findByClerkId(clerkId);
+    const userConversations = await findActiveConversationsIds(user.id);
+    userConversations.forEach((convoId) => {
+      socket.leave(convoId);
+      activeRooms.delete(convoId);
+      console.log(`${user.fullname} AUTO leave room ${convoId}`);
+    });
+  } catch (error) {
+    console.error({ msg: "Failed to AUTO leave conversation", error });
+    socket.emit("error", { msg: "Failed to AUTO leave conversation" });
   }
 };

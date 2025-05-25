@@ -9,13 +9,10 @@ import { Button } from "./ui/button";
 import { PlusIcon } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import NavChatsItem from "./nav-chats-item";
-import { Conversation } from "@/hooks/use-conversations";
+import { useConversationsQuery } from "@/hooks/use-conversations-query";
 
-interface NavChatsProps {
-  conversations: Conversation[];
-}
-
-function NavChats({ conversations }: NavChatsProps) {
+function NavChats() {
+  const conversations = useConversationsQuery();
   const { chatId } = useParams();
   const navigate = useNavigate();
 
@@ -34,19 +31,21 @@ function NavChats({ conversations }: NavChatsProps) {
           </Button>
         </SidebarGroupLabel>
 
-        {conversations.map((item) => (
-          <SidebarMenuItem key={item.id} className="flex items-center">
-            <SidebarMenuButton
-              tooltip={item.name}
-              className={`px-2.5 py-7.5 ${
-                chatId === item.id ? "bg-muted" : ""
-              }`}
-              onClick={() => navigate(`/chat/${item.id}`)}
-            >
-              <NavChatsItem conversation={item} />
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
+        {conversations.data
+          ? conversations.data.map((item) => (
+              <SidebarMenuItem key={item.id} className="flex items-center">
+                <SidebarMenuButton
+                  tooltip={item.name}
+                  className={`px-2.5 py-7.5 ${
+                    chatId === item.id ? "bg-muted" : ""
+                  }`}
+                  onClick={() => navigate(`/chat/${item.id}`)}
+                >
+                  <NavChatsItem conversation={item} />
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))
+          : null}
       </SidebarMenu>
     </SidebarGroup>
   );

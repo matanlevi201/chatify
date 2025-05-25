@@ -1,4 +1,5 @@
-import { Conversation } from "@/hooks/use-conversations";
+import { publishMessageSeen } from "@/events/pulishers";
+import { Conversation } from "@/hooks/use-conversations-query";
 import { QueryClient } from "@tanstack/react-query";
 
 export const addConversation = (
@@ -42,7 +43,7 @@ export const markAsSeen = (
       if (convo.id !== activeConversationId) return convo;
       return { ...convo, unseenMessagesCount: 0 };
     });
-
+    publishMessageSeen(activeConversationId);
     return updatedConversations;
   });
 };

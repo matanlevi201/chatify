@@ -7,6 +7,8 @@ import http from "http";
 import {
   handleConversationJoin,
   handleConversationLeave,
+  handleConversationsAutoJoin,
+  handleConversationsAutoLeave,
   handleFriendAway,
   handleFriendOffline,
   handleFriendOnline,
@@ -83,7 +85,8 @@ export default function initSocket(server: http.Server) {
         handleFriendAway(socket, { clerkId: userId })
       );
       await handleFriendOnline(socket, { clerkId: userId });
-      socket.on("disconnect", () => {
+      await handleConversationsAutoJoin(socket, { clerkId: userId });
+      socket.on("disconnect", async () => {
         console.log("user disconnect");
         socket.off("conversation:join", handleConversationJoin);
         socket.off("conversation:leave", handleConversationLeave);
@@ -94,6 +97,7 @@ export default function initSocket(server: http.Server) {
         socket.off("friend:online", handleFriendOnline);
         socket.off("friend:offline", handleFriendOffline);
         socket.off("friend:away", handleFriendAway);
+        await handleConversationsAutoLeave(socket, { clerkId: userId });
         onlineUsers.delete(userId);
       });
     }

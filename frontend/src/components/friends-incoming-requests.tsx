@@ -3,54 +3,19 @@ import { AvatarFallback } from "@radix-ui/react-avatar";
 import { Button } from "./ui/button";
 import { CheckIcon, Loader2Icon, XIcon } from "lucide-react";
 import { Badge } from "./ui/badge";
-import { acceptRequest, rejectRequest } from "@/api/requests";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRequests } from "@/hooks/use-requests";
-import { useCurrentUser } from "@/hooks/use-current-user";
-import { useActiveConversation } from "@/stores/use-active-conversation";
+import { useRequestsQuery } from "@/hooks/use-requests-query";
+import useFriendsMutation from "@/hooks/use-friends-mutation";
+import { useCurrentUserQuery } from "@/hooks/use-current-user-query";
 
 function IncomingRequests() {
-  const { requests } = useRequests();
-  const queryClient = useQueryClient();
-  const { currentUser } = useCurrentUser();
+  const { acceptFriendMutation, rejectFriendMutation } = useFriendsMutation();
+  const requestsQuery = useRequestsQuery();
+  const currentUserQuery = useCurrentUserQuery();
 
-  const { mutateAsync: acceptFriend, isPending: acceptPending } = useMutation<
-    string,
-    Error,
-    { id: string; senderId: string }
-  >({
-    mutationKey: ["accept_friend"],
-    mutationFn: async ({ id, senderId }) => {
-      await acceptRequest({ id, senderId });
-      return id;
-    },
-    async onSuccess() {
-      const { activeConversation, setActiveConversation } =
-        useActiveConversation.getState();
-      await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
-      await queryClient.invalidateQueries({ queryKey: ["get_conversations"] });
-      if (activeConversation) {
-        setActiveConversation({
-          ...activeConversation,
-          inActiveParticipants: [],
-        });
-      }
-    },
-  });
-
-  const { mutateAsync: rejectFriend, isPending: rejectPending } = useMutation({
-    mutationKey: ["reject_friend"],
-    mutationFn: async (id: string) => {
-      await rejectRequest({ id });
-      return id;
-    },
-    async onSuccess() {
-      await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
-    },
-  });
-
+  const requests = requestsQuery.data ?? [];
   const incoming = requests.filter(
-    (req) => req.receiver.id === currentUser.id && req.status === "pending"
+    (req) =>
+      req.receiver.id === currentUserQuery.data?.id && req.status === "pending"
   );
 
   return (
@@ -94,10 +59,12 @@ function IncomingRequests() {
               <Button
                 size="sm"
                 variant="outline"
-                disabled={rejectPending}
-                onClick={async () => await rejectFriend(request.id)}
+                disabled={rejectFriendMutation.isPending}
+                onClick={async () =>
+                  await rejectFriendMutation.mutateAsync(request.id)
+                }
               >
-                {rejectPending ? (
+                {rejectFriendMutation.isPending ? (
                   <Loader2Icon className="animate-spin" />
                 ) : (
                   <XIcon className="h-4 w-4" />
@@ -106,15 +73,15 @@ function IncomingRequests() {
               </Button>
               <Button
                 size="sm"
-                disabled={acceptPending}
+                disabled={acceptFriendMutation.isPending}
                 onClick={async () =>
-                  await acceptFriend({
+                  await acceptFriendMutation.mutateAsync({
                     id: request.id,
                     senderId: request.sender.id,
                   })
                 }
               >
-                {acceptPending ? (
+                {acceptFriendMutation.isPending ? (
                   <Loader2Icon className="animate-spin" />
                 ) : (
                   <CheckIcon className="h-4 w-4" />

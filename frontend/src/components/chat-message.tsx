@@ -2,28 +2,37 @@ import { CheckCheckIcon } from "lucide-react";
 import AvatarWithStatus from "./avatar-with-status";
 import { format } from "date-fns";
 import { memo } from "react";
-import { useCurrentUser } from "@/hooks/use-current-user";
-import { Message } from "@/hooks/use-messages";
-import { Conversation } from "@/hooks/use-conversations";
+import { useActiveConversation } from "@/stores/use-active-conversation";
+import { useCurrentUserQuery } from "@/hooks/use-current-user-query";
 
-function ChatMessageComponent({
-  message,
-  conversation,
-}: {
-  message: Message;
-  conversation: Conversation;
-}) {
+export type Message = {
+  id: string;
+  sender: { id: string; fullname: string; avatarUrl: string };
+  content: string;
+  readBy: { id: string; fullname: string; avatarUrl: string }[];
+  conversation: string;
+  createdAt: Date;
+  status?: "pending" | "sent" | "delivered";
+};
+
+function ChatMessageComponent({ message }: { message: Message }) {
+  const currentUserQuery = useCurrentUserQuery();
+  const conversation = useActiveConversation(
+    (state) => state.activeConversation
+  );
+  if (!currentUserQuery.data) return null;
   const { sender, createdAt, content, readBy } = message;
-  const { currentUser } = useCurrentUser();
 
   const formatted = format(createdAt, "h:mm a").toLowerCase();
-  const showMessageStatus = sender.id === currentUser.id;
-  const seenByAll = readBy.length === conversation.participants.length - 1;
+  const showMessageStatus = sender.id === currentUserQuery.data.id;
+  const seenByAll = conversation
+    ? readBy.length === conversation.participants.length - 1
+    : false;
 
   return (
     <div
       className={`flex gap-2 ${
-        sender.id === currentUser.id ? "flex-row-reverse" : ""
+        sender.id === currentUserQuery.data.id ? "flex-row-reverse" : ""
       }`}
     >
       <AvatarWithStatus
@@ -33,7 +42,7 @@ function ChatMessageComponent({
       />
       <div
         className={`p-2 rounded-md shadow-lg max-w-[75%] flex flex-col gap-1  ${
-          sender.id === currentUser.id
+          sender.id === currentUserQuery.data.id
             ? "bg-primary text-white rounded-tr-none"
             : "bg-background rounded-tl-none"
         }`}
@@ -41,7 +50,7 @@ function ChatMessageComponent({
         <p className="text-sm">{content}</p>
         <span
           className={`text-xs text-muted-background ${
-            sender.id === currentUser.id
+            sender.id === currentUserQuery.data.id
               ? "flex gap-1 items-center place-self-end"
               : ""
           }`}
@@ -61,13 +70,10 @@ function ChatMessageComponent({
 }
 
 const areEqual = (
-  prevProps: { message: Message; conversation: Conversation },
-  nextProps: { message: Message; conversation: Conversation }
+  prevProps: { message: Message },
+  nextProps: { message: Message }
 ) => {
-  return (
-    prevProps.conversation.id === nextProps.conversation.id &&
-    prevProps.message.readBy.length === nextProps.message.readBy.length
-  );
+  return prevProps.message.readBy.length === nextProps.message.readBy.length;
 };
 
 const ChatMessage = memo(ChatMessageComponent, areEqual);
