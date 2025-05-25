@@ -15,9 +15,11 @@ import NavChats from "./nav-chats";
 import useUserActivity from "@/hooks/use-user-activity";
 import { useCurrentUserQuery } from "@/hooks/use-current-user-query";
 import { useRequestsQuery } from "@/hooks/use-requests-query";
+import { useNavigate } from "react-router-dom";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   useUserActivity();
+  const navigate = useNavigate();
   const currentUserQuery = useCurrentUserQuery();
   const requestsQuery = useRequestsQuery();
 
@@ -51,11 +53,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="bg-background">
-        <div className="flex items-center gap-2">
-          <img src="/chatify.svg" className="size-8" />
-          <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-bold text-xl">Chatify</span>
+        <div className="flex items-center justify-between">
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => navigate("/")}
+          >
+            <img src="/chatify.svg" className="size-8" />
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-bold text-xl">Chatify</span>
+            </div>
           </div>
+
           <ModeToggle />
         </div>
       </SidebarHeader>

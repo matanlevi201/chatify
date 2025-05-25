@@ -3,7 +3,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
 import Onboard from "@/pages/on-board";
 import AppLayout from "./pages/app-layout";
-import BlankPage from "./pages/blank-page";
+import LandingPage from "./pages/landing-page";
 import Friends from "./pages/friends";
 import MyProfile from "./pages/my-profile";
 import ProfileSetup from "./pages/profile-setup";
@@ -25,7 +25,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <BlankPage />,
+        element: <LandingPage />,
       },
       {
         path: "chat/:chatId",
