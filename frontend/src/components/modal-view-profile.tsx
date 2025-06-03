@@ -33,7 +33,7 @@ function ModalViewProfile({ open, props }: ModalViewProfileProps) {
     createdAt: Date;
     mutualFriends: number;
   }>({
-    queryKey: ["get_user"],
+    queryKey: ["get_user", props.userId],
     queryFn: async () => {
       const user = await getUser({ id: props.userId });
       return user;

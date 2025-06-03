@@ -66,3 +66,18 @@ export const publishFriendRemove = (
     activeRooms.delete(conversationId);
   }
 };
+
+export const publishNewGroupConversation = (
+  participantsClerkIds: string[],
+  id: string
+) => {
+  participantsClerkIds.forEach((clerkId) => {
+    const targetSocket = onlineUsers.get(clerkId);
+    if (targetSocket) {
+      targetSocket.emit("conversation:group:new", { id });
+      const currentRooms = activeRooms.get(clerkId) ?? [];
+      activeRooms.set(clerkId, [...currentRooms, id]);
+      targetSocket.join(id);
+    }
+  });
+};

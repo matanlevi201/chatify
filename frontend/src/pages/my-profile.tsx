@@ -1,9 +1,9 @@
 import AppHeader from "@/components/app-header";
-import FormUpdateProfile, {
-  Field,
-  FormButton,
-  SetProfileSchema,
-} from "@/components/form-update-profile";
+import AvatarWithStatus from "@/components/avatar-with-status";
+import InputAvatar from "@/components/input-avatar";
+import InputDefault from "@/components/input-default";
+import InputTextarea from "@/components/input-textarea";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,75 +11,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import useCurrentUserMutation from "@/hooks/use-current-user-mutation";
+import { Form } from "@/components/ui/form";
 import { useCurrentUserQuery } from "@/hooks/use-current-user-query";
+import useFormUpdateProfile from "@/hooks/use-form-update-profile";
 import { CheckIcon, Loader2Icon } from "lucide-react";
 import { useState } from "react";
-
-const inputs: Field<SetProfileSchema>[] = [
-  {
-    name: "avatar",
-    type: "avatar",
-  },
-  {
-    type: "text",
-    name: "email",
-    label: "Email",
-    placeholder: "your@email.com",
-    readOnly: true,
-    description: "Email cannot be changed",
-  },
-  {
-    name: "fullname",
-    type: "text",
-    label: "Display Name",
-    placeholder: "Enter your display name",
-    description: "This is how others will see you in the chat",
-  },
-  {
-    name: "bio",
-    type: "textarea",
-    label: "Bio",
-    placeholder: "Tell us about yourself...",
-  },
-];
 
 function MyProfile() {
   const currentUserQuery = useCurrentUserQuery();
   const [isEditing, setIsEditing] = useState(false);
-  const { updateProfileMutation } = useCurrentUserMutation();
-
-  const save = async (values: SetProfileSchema) => {
-    await updateProfileMutation.mutateAsync(values);
-    setIsEditing(false);
-  };
-
-  const cancel = () => {
-    setIsEditing(false);
-  };
-
-  const onEditbuttons: FormButton[] = [
-    {
-      name: "Cancel",
-      isLoading: updateProfileMutation.isPending,
-      action: cancel,
-      variant: "outline",
-      type: "reset",
-    },
-    {
-      name: "Save",
-      isLoading: updateProfileMutation.isPending,
-      loadingIcon: <Loader2Icon className="animate-spin" />,
-      notLoadingIcon: <CheckIcon />,
-      type: "submit",
-    },
-  ];
-  const buttons: FormButton[] = [
-    { name: "Edit Profile", action: () => setIsEditing(true) },
-  ];
+  const { inputs, form, submit, submitDetails } = useFormUpdateProfile();
 
   if (currentUserQuery.isPending) return <div>Loading...</div>;
   if (!currentUserQuery.data) return;
+
+  const save = async () => {
+    await submit();
+    setIsEditing(false);
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -95,17 +44,73 @@ function MyProfile() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <FormUpdateProfile
-              inputs={inputs}
-              buttons={isEditing ? onEditbuttons : buttons}
-              disabled={!isEditing}
-              defaultValues={{
-                email: currentUserQuery.data.email,
-                fullname: currentUserQuery.data.fullname,
-                bio: currentUserQuery.data.bio,
-              }}
-              onSubmit={save}
-            />
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(save)}
+                className="flex flex-col space-y-4"
+              >
+                {!isEditing ? (
+                  <AvatarWithStatus
+                    url={currentUserQuery.data.avatarUrl}
+                    name={currentUserQuery.data.fullname}
+                    className="size-28 m-auto border-4 border-background shadow-md group-hover:cursor-pointer"
+                  />
+                ) : (
+                  <InputAvatar
+                    {...inputs.avatar}
+                    options={inputs.avatar.fileOptions}
+                    disabled={!isEditing || submitDetails.isPending}
+                  />
+                )}
+
+                <InputDefault
+                  {...inputs.fullname}
+                  disabled={!isEditing || submitDetails.isPending}
+                />
+                <InputDefault
+                  {...inputs.email}
+                  readOnly={true}
+                  disabled={true}
+                />
+                <InputTextarea
+                  {...inputs.bio}
+                  disabled={!isEditing || submitDetails.isPending}
+                />
+
+                {!isEditing ? (
+                  <Button type="button" onClick={() => setIsEditing(true)}>
+                    Edit Profile
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      className="flex-1"
+                      variant="outline"
+                      onClick={() => {
+                        form.reset();
+                        setIsEditing(false);
+                      }}
+                      disabled={submitDetails.isPending}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={submitDetails.isPending}
+                      className="flex-1"
+                    >
+                      Save
+                      {submitDetails.isPending ? (
+                        <Loader2Icon className="animate-spin" />
+                      ) : (
+                        <CheckIcon />
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </form>
+            </Form>
           </CardContent>
         </Card>
       </div>

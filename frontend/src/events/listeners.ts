@@ -1,6 +1,8 @@
+import { getConversation } from "@/api/conversations";
 import { CurrentUser } from "@/hooks/use-current-user-query";
 import { notification } from "@/lib/notification";
 import {
+  addConversation,
   getCurrentConversations,
   setParticipantStatus,
   updateConversation,
@@ -101,7 +103,10 @@ export const friendRemove: ServerToClientEvents["friend:remove"] = async () => {
     useActiveConversation.getState();
   await queryClient.refetchQueries({ queryKey: ["get_friends"] });
   await queryClient.invalidateQueries({ queryKey: ["get_requests"] });
-  await queryClient.invalidateQueries({ queryKey: ["get_conversations"], refetchType: "all"});
+  await queryClient.invalidateQueries({
+    queryKey: ["get_conversations"],
+    refetchType: "all",
+  });
   if (activeConversation) {
     setActiveConversation({
       ...activeConversation,
@@ -208,4 +213,10 @@ export const handleRequstsAccept: ServerToClientEvents["request:accept"] =
         description: data.message,
       },
     });
+  };
+
+export const handleNewGroupConversation: ServerToClientEvents["conversation:group:new"] =
+  async (data) => {
+    const newConversation = await getConversation(data.id);
+    addConversation(queryClient, newConversation);
   };

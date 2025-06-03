@@ -24,7 +24,7 @@ function AllFriends() {
   const friendsList = friends.data ?? [];
 
   return (
-    <div className="w-full">
+    <div className="w-full space-y-2">
       <h3 className="text-md font-medium mb-2 flex items-center">
         Your Friends
       </h3>

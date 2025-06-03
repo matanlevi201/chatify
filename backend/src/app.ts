@@ -10,7 +10,8 @@ import {
   WebhooksRouter,
 } from "./routes";
 import { clerkMiddleware } from "@clerk/express";
-import { errorHandler } from "./middlewares";
+import { errorHandler, requireAuth } from "./middlewares";
+import { getAvatar } from "./middlewares/get-avatar";
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use("/api/friends", FriendRouter);
 app.use("/api/requests", RequestRouter);
 app.use("/api/users", UserRouter);
 app.use("/api/webhooks", WebhooksRouter);
+app.get("/api/avatar/:key", requireAuth, getAvatar);
 
 app.use(errorHandler);
 

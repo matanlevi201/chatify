@@ -31,6 +31,7 @@ export interface ServerToClientEvents {
   "friend:online": (data: { friendId: string }) => void;
   "friend:offline": (data: { friendId: string }) => void;
   "friend:away": (data: { friendId: string }) => void;
+  "conversation:group:new": (data: { id: string }) => void;
   error: (data: { msg: string }) => void;
 }
 export interface ClientToServerEvents {

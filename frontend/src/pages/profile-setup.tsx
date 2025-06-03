@@ -8,53 +8,21 @@ import {
 } from "@/components/ui/card";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useNavigate } from "react-router-dom";
-import FormUpdateProfile, {
-  Field,
-  FormButton,
-  SetProfileSchema,
-} from "@/components/form-update-profile";
 import { Button } from "@/components/ui/button";
 import TooltipWrapper from "@/components/tooltip-wrapper";
-import { useCurrentUserQuery } from "@/hooks/use-current-user-query";
-import useCurrentUserMutation from "@/hooks/use-current-user-mutation";
-
-const inputs: Field<SetProfileSchema>[] = [
-  {
-    name: "avatar",
-    type: "avatar",
-  },
-  {
-    name: "fullname",
-    type: "text",
-    label: "Display Name",
-    placeholder: "Enter your display name",
-    description: "This is how others will see you in the chat",
-  },
-];
+import useFormUpdateProfile from "@/hooks/use-form-update-profile";
+import { Form } from "@/components/ui/form";
+import InputDefault from "@/components/input-default";
+import InputAvatar from "@/components/input-avatar";
 
 function ProfileSetup() {
   const navigate = useNavigate();
-  const currentUserQuery = useCurrentUserQuery();
-  const { updateProfileMutation } = useCurrentUserMutation();
+  const { inputs, form, submit, submitDetails } = useFormUpdateProfile();
 
-  const saveAndContinue = async (formValues: SetProfileSchema) => {
-    await updateProfileMutation.mutateAsync(formValues);
+  const saveAndContinue = async () => {
+    await submit();
     navigate("/");
   };
-
-  const buttons: FormButton[] = [
-    {
-      name: "Continue to Chat",
-      type: "submit",
-      isLoading: updateProfileMutation.isPending,
-      loadingIcon: <Loader2Icon className="animate-spin" />,
-      notLoadingIcon: <CheckIcon />,
-      className: "w-full",
-    },
-  ];
-
-  if (currentUserQuery.isPending) return <div>Loading...</div>;
-  if (!currentUserQuery.data) return;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -80,15 +48,35 @@ function ProfileSetup() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <FormUpdateProfile
-            inputs={inputs}
-            buttons={buttons}
-            onSubmit={saveAndContinue}
-            defaultValues={{
-              fullname: currentUserQuery.data.fullname,
-              bio: currentUserQuery.data.bio,
-            }}
-          />
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(saveAndContinue)}
+              className="flex flex-col space-y-4"
+            >
+              <InputAvatar
+                {...inputs.avatar}
+                options={inputs.avatar.fileOptions}
+                disabled={submitDetails.isPending}
+              />
+              <InputDefault
+                {...inputs.fullname}
+                disabled={submitDetails.isPending}
+              />
+
+              <Button
+                type="submit"
+                disabled={submitDetails.isPending}
+                className="flex-1"
+              >
+                Continue to Chat
+                {submitDetails.isPending ? (
+                  <Loader2Icon className="animate-spin" />
+                ) : (
+                  <CheckIcon />
+                )}
+              </Button>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

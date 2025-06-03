@@ -22,12 +22,13 @@ function ConversationWindow() {
     if (chatId) {
       const active = conversations.find((c) => c.id === chatId);
       if (active) {
+        console.log(active);
         useActiveConversation.getState().setActiveConversation(active);
         markAsSeen(queryClient, chatId);
       }
     }
     return () => useActiveConversation.getState().closeActiveConversation();
-  }, [conversationsQuery.data]);
+  }, [conversationsQuery.data, chatId]);
 
   if (!conversationsQuery.data) return <div>Loading...</div>;
 

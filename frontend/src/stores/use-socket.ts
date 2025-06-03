@@ -7,6 +7,7 @@ import {
   friendRemove,
   handleMessageRead,
   handleMessageSent,
+  handleNewGroupConversation,
   handleNewMessage,
   handleRequestCancel,
   handleRequestReject,
@@ -58,6 +59,7 @@ export interface ServerToClientEvents {
   "friend:online": (data: { friendId: string }) => void;
   "friend:offline": (data: { friendId: string }) => void;
   "friend:away": (data: { friendId: string }) => void;
+  "conversation:group:new": (data: { id: string }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -115,6 +117,7 @@ export const useSocket = create<SocketStore>((set, get) => ({
         socket.on("friend:online", friendOnline);
         socket.on("friend:offline", friendOffline);
         socket.on("friend:away", friendAway);
+        socket.on("conversation:group:new", handleNewGroupConversation);
 
         set({ socket, isReady: true });
         resolve();
@@ -139,6 +142,7 @@ export const useSocket = create<SocketStore>((set, get) => ({
         socket.off("friend:online", friendOnline);
         socket.off("friend:offline", friendOffline);
         socket.off("friend:away", friendAway);
+        socket.off("conversation:group:new", handleNewGroupConversation);
 
         set({ isReady: false, socket: null });
       });

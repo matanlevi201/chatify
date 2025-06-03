@@ -8,6 +8,11 @@ export type ModalMap = {
     callback: () => void | Promise<void>;
   };
   ["view:profile"]: { userId: string };
+  ["create:group:chat"]: {
+    name?: string;
+    participants?: [string, ...string[]];
+    avatar?: string;
+  } | null;
 };
 
 type ModalName = keyof ModalMap;

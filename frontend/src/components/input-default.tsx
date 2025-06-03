@@ -11,7 +11,7 @@ import { InputHTMLAttributes } from "react";
 import { useFormContext } from "react-hook-form";
 
 type Props = {
-  label: string;
+  label?: string;
   name: string;
   defaultVal?: string | number | never[];
   className?: string;
@@ -19,7 +19,7 @@ type Props = {
 } & InputHTMLAttributes<HTMLInputElement>;
 
 function InputDefault({
-  label,
+  label = "",
   name,
   defaultVal,
   description,

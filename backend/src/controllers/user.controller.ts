@@ -1,15 +1,13 @@
 import { User, type UserUpdateAttrs } from "../models/user";
 import type { Request, Response } from "express";
-import { getObject } from "../externals/storage";
-import { NotFoundError } from "../errors";
 import { env } from "../config/env";
 import { Types } from "mongoose";
 import {
   findByClerkId,
   getUserProfileView,
-  swapAvatarsByClerkId,
   updateByClerkId,
 } from "../services/user.service";
+import { swapAvatarsByKeyId } from "../services/storage.service";
 
 export const getCurrentUser = async (req: Request, res: Response) => {
   const user = await findByClerkId(req.auth?.userId!);
@@ -21,8 +19,9 @@ export const setProfile = async (req: Request, res: Response) => {
   const { fullname, bio } = req.body;
   const updates: Partial<UserUpdateAttrs> = { fullname, bio };
   if (req.file) {
-    const { key } = await swapAvatarsByClerkId(clerkId, req.file);
-    updates.avatarUrl = `${env.BACKEND_URL}/api/users/profile/avatar/${key}`;
+    const user = await findByClerkId(clerkId);
+    const { key } = await swapAvatarsByKeyId(clerkId, req.file, user.avatarKey);
+    updates.avatarUrl = `${env.BACKEND_URL}/api/avatar/${key}`;
     updates.avatarKey = key;
   }
   const updatedUser = await updateByClerkId(clerkId, updates);
@@ -31,21 +30,6 @@ export const setProfile = async (req: Request, res: Response) => {
     avatarUrl: updatedUser.avatarUrl,
     bio: updatedUser.bio,
   });
-};
-
-export const getAvatar = async (req: Request, res: Response) => {
-  const { key } = req.params;
-  await findByClerkId(req.auth?.userId!);
-  try {
-    const stream = await getObject({
-      fileKey: key ?? "",
-    });
-
-    res.setHeader("Content-Type", "image/jpeg");
-    stream.pipe(res);
-  } catch (err) {
-    throw new NotFoundError();
-  }
 };
 
 export const searchUsers = async (req: Request, res: Response) => {

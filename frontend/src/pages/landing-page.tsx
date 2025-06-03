@@ -11,15 +11,17 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import AppHeader from "@/components/app-header";
 import { useNavigate } from "react-router-dom";
+import { useModalStore } from "@/stores/use-modal-store";
 
 function LandingPage() {
   const navigate = useNavigate();
+  const setActiveModal = useModalStore((state) => state.setActiveModal);
   return (
     <div>
       <AppHeader>
         <span className="font-semibold">Start Chatting ⚡</span>
       </AppHeader>
-      <div className="flex flex-col items-center justify-center h-full p-8 bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-background via-background to-muted/20  p-2">
         <div className="max-w-2xl mx-auto text-center space-y-8">
           {/* Main Illustration */}
           <div className="relative">
@@ -71,31 +73,6 @@ function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
             <Card
               className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20"
-              onClick={() => {}}
-            >
-              <CardContent className="p-6 text-center space-y-4">
-                <div className="w-12 h-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <Users className="w-6 h-6 text-primary" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-semibold">Create Group Chat</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Start a conversation with multiple friends
-                  </p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="group-hover:bg-primary/10"
-                >
-                  Create Group
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card
-              className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20"
               onClick={() => navigate("/friends")}
             >
               <CardContent className="p-6 text-center space-y-4">
@@ -114,6 +91,30 @@ function LandingPage() {
                   className="group-hover:bg-primary/10"
                 >
                   View Friends
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </CardContent>
+            </Card>
+            <Card
+              className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20"
+              onClick={() => setActiveModal("create:group:chat", null)}
+            >
+              <CardContent className="p-6 text-center space-y-4">
+                <div className="w-12 h-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <Users className="w-6 h-6 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-semibold">Create Group Chat</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Start a conversation with multiple friends
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="group-hover:bg-primary/10"
+                >
+                  Create Group
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </CardContent>

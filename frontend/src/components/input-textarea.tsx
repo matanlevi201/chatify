@@ -10,14 +10,14 @@ import { useFormContext } from "react-hook-form";
 import { Textarea } from "./ui/textarea";
 
 type Props = {
-  label: string;
+  label?: string;
   name: string;
   defaultVal?: string | number | never[];
   className?: string;
 } & InputHTMLAttributes<HTMLTextAreaElement>;
 
 function InputTextarea({
-  label,
+  label = "",
   name,
   defaultVal,
   className,
