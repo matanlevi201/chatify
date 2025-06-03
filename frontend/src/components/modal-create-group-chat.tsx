@@ -22,8 +22,9 @@ interface ModalCreateGroupChatProps {
 
 function ModalCreateGroupChat({ open, props }: ModalCreateGroupChatProps) {
   const { closeModal } = useModalStore();
-  const { inputs, form, submit, submitDetails } =
-    useFormCreateGroupcChat(props);
+  const { inputs, form, submit, submitDetails } = useFormCreateGroupcChat(
+    props ?? undefined
+  );
 
   const save = async () => {
     await submit();
