@@ -26,7 +26,7 @@ app.use(
   })
 );
 
-app.use(express.static(path.join(__dirname, "..", "../frontend/dist")));
+app.use(express.static(path.join(__dirname, "..", "../../frontend/dist")));
 
 app.use(clerkMiddleware());
 app.use("/api/conversations", ConversationRouter);
@@ -40,7 +40,7 @@ app.all("/api/*", async () => {
 });
 
 app.use("/*", (_, res) => {
-  res.sendFile(path.resolve(__dirname, "..", "../frontend/dist/index.html"));
+  res.sendFile(path.resolve(__dirname, "..", "../../frontend/dist/index.html"));
 });
 app.use(errorHandler);
 
