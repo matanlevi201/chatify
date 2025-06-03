@@ -6,8 +6,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
-    "start": "node build/src/index.js",
-    "postinstall": "cd ../frontend && npm install && npm run build"
+    "start": "node build/src/index.js"
   },
   "keywords": [],
   "author": "",
