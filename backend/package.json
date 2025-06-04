@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
-    "start": "node build/src/index.js"
+    "start": "node build/src/index.js",
+    "postinstall": "echo VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY > ../frontend/.env.local && cd ../frontend && npm install && npm run build"
   },
   "keywords": [],
   "author": "",

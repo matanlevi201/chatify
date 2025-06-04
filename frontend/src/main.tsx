@@ -11,6 +11,7 @@ import ToastWrapper from "./components/toasts/toast-wrapper";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+console.log({ PUBLISHABLE_KEY });
 
 if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key");
