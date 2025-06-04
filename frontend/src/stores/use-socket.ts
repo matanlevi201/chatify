@@ -16,6 +16,8 @@ import {
   handleTypingEnd,
   handleTypingStart,
 } from "@/events/listeners";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 export interface ServerToClientEvents {
   "request:send": (data: {
     fromUser: string;
@@ -92,7 +94,7 @@ export const useSocket = create<SocketStore>((set, get) => ({
   async initSocket(token: string) {
     return new Promise<void>((resolve, reject) => {
       const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
-        "http://localhost:3000",
+        BACKEND_URL,
         {
           auth: { token },
           transports: ["websocket"],
